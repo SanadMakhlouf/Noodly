@@ -46,16 +46,16 @@
 @media (min-width: 768px) {
   .nav-links {
     display: flex;
-    gap: 30px;
+    gap: 100px;
   }
 
   .nav-link {
-    color: white;
-    font-weight: 500;
+    color: var(--noodly-yellow);
+    font-weight: 400;
     transition: color 0.3s ease;
   }
 
   .nav-link:hover {
     color: var(--noodly-yellow);
   }
-} 
+}
