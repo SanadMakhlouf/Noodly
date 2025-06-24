@@ -1,5 +1,6 @@
 import React from "react";
 import "../styles/Menu.css";
+import noodle from "../assets/box.png";
 
 function MenuItem({ name, description, price, image }) {
   return (
@@ -11,13 +12,16 @@ function MenuItem({ name, description, price, image }) {
         <div>
           <h3 className="menu-title">{name}</h3>
           <p className="menu-description">{description}</p>
+          <div className="menu-size">CHOOSE YOUR SIZE</div>
+          <div className="menu-sizes">NORMAL, MEDIUM, SPICY</div>
         </div>
         <div className="menu-price-container">
+          <button className="menu-button">ORDER NOW</button>
           <div>
-            <div className="menu-size">CHOOSE YOUR SIZE</div>
+            
             <div className="menu-price">{price}</div>
           </div>
-          <button className="menu-button">ORDER NOW</button>
+          
         </div>
       </div>
     </div>
@@ -30,27 +34,27 @@ function Menu() {
       name: "KOREAN",
       description:
         "Spicy Korean style noodles with special sauce and vegetables",
-      price: "Rs 450",
-      image: null,
+      price: "AED 450",
+      image: noodle,
     },
     {
       name: "SOYA",
       description: "Classic soya sauce noodles with fresh vegetables",
-      price: "Rs 450",
-      image: null,
+      price: "AED 450",
+      image: noodle,
     },
     {
       name: "CHEESY",
       description: "Creamy cheese noodles with special toppings and herbs",
-      price: "Rs 450",
-      image: null,
+      price: "AED 450",
+      image: noodle,
     },
     {
       name: "KOREAN",
       description:
         "Spicy Korean style noodles with special sauce and vegetables",
-      price: "Rs 450",
-      image: null,
+      price: "AED 450",
+      image: noodle,
     },
   ];
 
@@ -61,12 +65,6 @@ function Menu() {
           {menuItems.map((item, index) => (
             <MenuItem key={index} {...item} />
           ))}
-        </div>
-        <div className="pagination-dots">
-          <div className="dot"></div>
-          <div className="dot"></div>
-          <div className="dot"></div>
-          <div className="dot active"></div>
         </div>
       </div>
     </section>

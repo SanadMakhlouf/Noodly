@@ -15,8 +15,8 @@ function Story() {
           layout. The point of using Lorem.
         </p>
         <div className="story-buttons">
-          <button className="btn-outline">READ MORE</button>
-          <button className="btn-primary">BOOK NOW</button>
+          <button className="btn-primaryy">READ MORE</button>
+          <button className="btn-primaryy">BOOK NOW</button>
         </div>
       </div>
     </section>

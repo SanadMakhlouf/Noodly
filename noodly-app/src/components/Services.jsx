@@ -80,12 +80,7 @@ function Services() {
             description="Lorem ipsum dolor sit amet, consectetur adipiscing elit. Ut elit tellus luctus nec ullamcorper mattis."
           />
         </div>
-        <div className="pagination-dots">
-          <div className="dot"></div>
-          <div className="dot"></div>
-          <div className="dot active"></div>
-          <div className="dot"></div>
-        </div>
+      
       </div>
     </section>
   );

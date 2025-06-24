@@ -9,18 +9,41 @@
   font-weight: bold;
   color: var(--noodly-yellow);
   margin-bottom: 20px;
+  text-align: left;
 }
 
 .story-text {
-  max-width: 800px;
   margin: 0 auto 30px;
+  color: var(--noodly-yellow);
   opacity: 0.8;
   line-height: 1.6;
+  text-align: left;
 }
 
 .story-buttons {
   display: flex;
-  justify-content: center;
+  justify-content: flex-start;
   gap: 20px;
   margin-bottom: 30px;
+}
+
+.story-buttons .btn-outline,
+.story-buttons .btn-primary {
+  min-width: 180px;
+  padding: 12px 24px;
+  font-size: 16px;
+  font-weight: 600;
+  border-radius: 5px;
+}
+.btn-primaryy {
+  background-color: var(--noodly-blue);
+  color: var(--noodly-yellow);
+  border: 2px solid var(--noodly-yellow);
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  font-size: 14px;
+  justify-content: flex-start;
 }

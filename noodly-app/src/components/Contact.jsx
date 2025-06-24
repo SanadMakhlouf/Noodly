@@ -1,5 +1,6 @@
 import React from "react";
 import "../styles/Contact.css";
+import bag from "../assets/bag.png";
 
 function ContactCard({ icon, title, subtitle }) {
   return (
@@ -7,7 +8,6 @@ function ContactCard({ icon, title, subtitle }) {
       <div className="contact-icon">{icon}</div>
       <h3 className="contact-title">{title}</h3>
       <p className="contact-text">{subtitle}</p>
-      <p className="contact-subtext">Call us anytime</p>
     </div>
   );
 }
@@ -20,8 +20,8 @@ function Contact() {
           <ContactCard
             icon={
               <svg
-                width="36"
-                height="36"
+                width="68"
+                height="68"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -41,8 +41,8 @@ function Contact() {
           <ContactCard
             icon={
               <svg
-                width="36"
-                height="36"
+                width="68"
+                height="68"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -62,8 +62,8 @@ function Contact() {
           <ContactCard
             icon={
               <svg
-                width="36"
-                height="36"
+                width="68"
+                height="68"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -83,8 +83,8 @@ function Contact() {
           <ContactCard
             icon={
               <svg
-                width="36"
-                height="36"
+                width="68"
+                height="68"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -103,21 +103,7 @@ function Contact() {
           />
         </div>
         <div className="contact-image">
-          <div
-            style={{
-              width: "200px",
-              height: "200px",
-              backgroundColor: "var(--noodly-yellow)",
-              borderRadius: "10px",
-              display: "flex",
-              justifyContent: "center",
-              alignItems: "center",
-              color: "var(--noodly-blue)",
-              fontWeight: "bold",
-            }}
-          >
-            Shopping Bag
-          </div>
+          <img src={bag} alt="Noodly Shopping Bag" />
         </div>
       </div>
     </section>
