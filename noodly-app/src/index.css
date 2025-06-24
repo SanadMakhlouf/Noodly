@@ -1,0 +1,9 @@
+/* Import all component styles */
+@import "./styles/variables.css";
+@import "./styles/Navbar.css";
+@import "./styles/Hero.css";
+@import "./styles/Story.css";
+@import "./styles/Services.css";
+@import "./styles/Menu.css";
+@import "./styles/Contact.css";
+@import "./styles/Footer.css";

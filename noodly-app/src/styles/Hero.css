@@ -1,0 +1,144 @@
+/* Hero Section */
+.hero {
+  padding: 60px 0;
+}
+
+.hero-container {
+  display: flex;
+  flex-direction: column;
+}
+
+.hero-content {
+  margin-bottom: 40px;
+}
+
+.hero-title {
+  font-size: 40px;
+  font-weight: bold;
+  margin-bottom: 10px;
+  color: var(--noodly-yellow);
+}
+
+.hero-subtitle {
+  font-size: 30px;
+  font-weight: 400;
+  color: var(--noodly-yellow);
+  margin-bottom: 20px;
+}
+
+.hero-text {
+  margin-bottom: 30px;
+  opacity: 0.8;
+  line-height: 1.6;
+  color: var(--noodly-yellow);
+}
+.btn-primary {
+  background-color: var(--noodly-yellow);
+  color: var(--noodly-blue);
+  border: none;
+  padding: 5px 5px;
+  padding-right: 25px;
+  border-radius: 30px;
+  font-size: 18px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  margin-top: 20px;
+  font-weight: 700;
+  text-align: center;
+  display: flex;
+  align-items: center;
+ 
+}
+.btn-primary i {
+  background-color: var(--noodly-blue);
+  color: var(--noodly-yellow);
+  border-radius: 50%;
+  padding: 10px;
+  font-size: 30px;
+  margin-right: 10px;
+}
+.hero-image {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 300px;
+}
+
+.noodly-cup {
+  width: 200px;
+  height: 200px;
+  background-color: var(--noodly-yellow);
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transform: rotate(-6deg);
+}
+
+.noodly-cup-inner {
+  width: 180px;
+  height: 180px;
+  background-color: var(--noodly-blue);
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: var(--noodly-yellow);
+  font-size: 24px;
+  font-weight: bold;
+}
+
+/* Styles pour les gobelets de nouilles */
+.noodly-cup-container {
+  position: relative;
+  height: 500px;
+}
+
+.noodly-cup-1 {
+  position: absolute;
+  width: 80%;
+  top: 0;
+  right: 0;
+  z-index: 30;
+  transform: rotate(-15deg);
+}
+
+.noodly-cup-2 {
+  position: absolute;
+  width: 80%;
+  top: 30%;
+  right: 10%;
+  z-index: 20;
+  transform: rotate(15deg);
+}
+
+.noodly-cup-3 {
+  position: absolute;
+  width: 80%;
+  top: 60%;
+  right: 5%;
+  z-index: 10;
+  transform: rotate(-15deg);
+}
+
+/* Media Queries */
+@media (min-width: 768px) {
+  .hero-container {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .hero-content {
+    width: 50%;
+    margin-bottom: 0;
+    padding-right: 30px;
+  }
+
+  .hero-image {
+    width: 50%;
+    height: 400px;
+  }
+}
