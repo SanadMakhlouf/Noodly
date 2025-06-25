@@ -1,8 +1,8 @@
 import React from "react";
 import "../styles/Menu.css";
-import noodle from "../assets/box.png";
+import noodle from "../assets/box1.png";
 
-function MenuItem({ name, description, price, image }) {
+function MenuItem({ name, description, price, image, spiceLevels }) {
   return (
     <div className="menu-card">
       <div className="menu-image">
@@ -12,16 +12,14 @@ function MenuItem({ name, description, price, image }) {
         <div>
           <h3 className="menu-title">{name}</h3>
           <p className="menu-description">{description}</p>
-          <div className="menu-size">CHOOSE YOUR SIZE</div>
-          <div className="menu-sizes">NORMAL, MEDIUM, SPICY</div>
+          <div className="menu-size">CHOOSE SPICE LEVEL :</div>
+          <div className="menu-sizes">
+            {spiceLevels || "NORMAL, MEDIUM, SPICY"}
+          </div>
         </div>
         <div className="menu-price-container">
           <button className="menu-button">ORDER NOW</button>
-          <div>
-            
-            <div className="menu-price">{price}</div>
-          </div>
-          
+          <div className="menu-price">{price}</div>
         </div>
       </div>
     </div>
@@ -32,28 +30,26 @@ function Menu() {
   const menuItems = [
     {
       name: "KOREAN",
-      description:
-        "Spicy Korean style noodles with special sauce and vegetables",
-      price: "AED 450",
+      description: "CHILI KOREAN SAUCE, NOODLY SPECIAL SPICES, PEPPERS.",
+      price: "35 AED",
       image: noodle,
     },
     {
       name: "SOYA",
-      description: "Classic soya sauce noodles with fresh vegetables",
-      price: "AED 450",
+      description: "SOYA SAUCE, FRESH VEGETABLES, NOODLY SPECIAL HERBS.",
+      price: "35 AED",
       image: noodle,
     },
     {
       name: "CHEESY",
-      description: "Creamy cheese noodles with special toppings and herbs",
-      price: "AED 450",
+      description: "CREAMY CHEESE SAUCE, SPECIAL TOPPINGS, HERBS.",
+      price: "35 AED",
       image: noodle,
     },
     {
-      name: "KOREAN",
-      description:
-        "Spicy Korean style noodles with special sauce and vegetables",
-      price: "AED 450",
+      name: "SPICY",
+      description: "HOT CHILI SAUCE, NOODLY SPECIAL SPICES, VEGETABLES.",
+      price: "35 AED",
       image: noodle,
     },
   ];

@@ -1,10 +1,11 @@
 /* Services Section */
 .services {
-  padding: 80px 0;
+  padding: 60px 0;
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
   position: relative;
+  border-radius: 30px;
 }
 
 .services::before {
@@ -32,7 +33,7 @@
 
 .service-card {
   background-color: var(--noodly-blue);
-  border-radius: 10px;
+  border-radius: 20px;
   width: 300px;
   padding: 30px;
   text-align: center;
@@ -80,7 +81,7 @@
 .service-text {
   opacity: 0.9;
   font-size: 14px;
-  color: white;
+  color: var(--noodly-yellow);
 }
 
 /* Media Queries */
