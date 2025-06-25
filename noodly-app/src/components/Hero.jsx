@@ -1,5 +1,6 @@
 import React from "react";
 import "../styles/Hero.css";
+import product from "../assets/product.png";
 
 function Hero() {
   return (
@@ -19,9 +20,7 @@ function Hero() {
           </button>
         </div>
         <div className="hero-image">
-          <div className="noodly-cup">
-            <div className="noodly-cup-inner">Noodly Cup</div>
-          </div>
+          <img src={product} alt="Noodly Product" className="product-image" />
         </div>
       </div>
     </section>
