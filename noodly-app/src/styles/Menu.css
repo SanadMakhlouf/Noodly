@@ -13,9 +13,10 @@
 .menu-card {
   display: flex;
   background-color: var(--noodly-yellow);
-  border-radius: 10px;
+  border-radius: 20px;
   overflow: hidden;
   height: 100%;
+  border: none;
 }
 
 .menu-image {
@@ -24,6 +25,8 @@
   position: relative;
   display: flex;
   align-items: center;
+  border-top-right-radius: 25px;
+  border-bottom-right-radius: 25px;
 }
 
 .menu-image img {
