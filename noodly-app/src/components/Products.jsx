@@ -1,9 +1,13 @@
-import React from "react";
+import React, { useState } from "react";
 import { useMenuData } from "../hooks/useMenuData";
 import "../styles/Products.css";
 import logo from "../assets/img40-removebg-preview.png";
+import ProductDetails from "./ProductDetails";
+
 const Products = () => {
-  const { products, loading, error } = useMenuData();
+  const { products, categories, loading, error } = useMenuData();
+  const [selectedCategory, setSelectedCategory] = useState("all");
+  const [selectedProduct, setSelectedProduct] = useState(null);
 
   if (loading) {
     return (
@@ -21,19 +25,72 @@ const Products = () => {
     );
   }
 
+  const filteredProducts =
+    selectedCategory === "all"
+      ? products
+      : products.filter((product) => product.category_id === selectedCategory);
+
+  const handleOrderClick = (product) => {
+    console.log("Order clicked for product:", product);
+    setSelectedProduct(product);
+    console.log("Selected product state updated:", product);
+  };
+
+  const handleCloseDetails = () => {
+    console.log("Closing product details");
+    setSelectedProduct(null);
+  };
+
+  const handleConfirmOrder = (orderDetails) => {
+    console.log("Order confirmed:", orderDetails);
+    setSelectedProduct(null);
+  };
+
+  console.log("Current selected product:", selectedProduct);
+  console.log("Filtered products:", filteredProducts);
+
   return (
     <div className="products-container">
       <div className="products-header">
-        <img
-          src={logo}
-          alt="Noodly Logo"
-          className="header-logo"
-        />
+        <img src={logo} alt="Noodly Logo" className="header-logo" />
         <h1 className="products-title">Our Menu</h1>
       </div>
 
+      <div className="categories-scroll">
+        <button
+          className={`category-item ${
+            selectedCategory === "all" ? "active" : ""
+          }`}
+          onClick={() => setSelectedCategory("all")}
+        >
+          All
+        </button>
+        {categories.map((category) => (
+          <button
+            key={category.id}
+            className={`category-item ${
+              selectedCategory === category.id ? "active" : ""
+            }`}
+            onClick={() => setSelectedCategory(category.id)}
+          >
+            {category.image && (
+              <img
+                src={category.image}
+                alt={category.name}
+                className="category-image"
+                onError={(e) => {
+                  e.target.onerror = null;
+                  e.target.style.display = "none";
+                }}
+              />
+            )}
+            <span>{category.name}</span>
+          </button>
+        ))}
+      </div>
+
       <div className="product-grid">
-        {products.map((product) => (
+        {filteredProducts.map((product) => (
           <div key={product.id} className="product-card">
             <div className="product-image-container">
               <img
@@ -66,14 +123,28 @@ const Products = () => {
                     <span className="price">${product.price.toFixed(2)}</span>
                   )}
                 </div>
-                {product.customizable && (
-                  <button className="customize-button">order now</button>
-                )}
+                <button
+                  className="customize-button"
+                  onClick={() => {
+                    console.log("Order button clicked for:", product.name);
+                    handleOrderClick(product);
+                  }}
+                >
+                  order now
+                </button>
               </div>
             </div>
           </div>
         ))}
       </div>
+
+      {selectedProduct && (
+        <ProductDetails
+          product={selectedProduct}
+          onClose={handleCloseDetails}
+          onConfirm={handleConfirmOrder}
+        />
+      )}
     </div>
   );
 };
