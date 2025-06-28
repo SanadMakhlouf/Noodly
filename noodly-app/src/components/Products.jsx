@@ -6,21 +6,19 @@ import logo from "../assets/img40-removebg-preview.png";
 import ProductDetails from "./ProductDetails";
 
 const Products = () => {
-  const { products, categories, loading, error } = useMenuData();
-  const [selectedCategory, setSelectedCategory] = useState("all");
+  const { products, categories, error, selectedCategory, setSelectedCategory } =
+    useMenuData();
   const [selectedProduct, setSelectedProduct] = useState(null);
   const location = useLocation();
   const searchParams = new URLSearchParams(location.search);
   const searchQuery = searchParams.get("search") || "";
 
-  // Filter products based on both category and search term
+  // Filter products based on search term only (category filtering is now handled by the API)
   const filteredProducts = products.filter((product) => {
-    const matchesCategory =
-      selectedCategory === "all" || product.category_id === selectedCategory;
-    const matchesSearch =
+    return (
       searchQuery === "" ||
-      product.name.toLowerCase().includes(searchQuery.toLowerCase());
-    return matchesCategory && matchesSearch;
+      product.name.toLowerCase().includes(searchQuery.toLowerCase())
+    );
   });
 
   // Scroll to matching product if search query exists
@@ -35,14 +33,6 @@ const Products = () => {
     }
   }, [searchQuery, filteredProducts]);
 
-  if (loading) {
-    return (
-      <div className="products-container">
-        <div className="loading-container">Loading delicious meals...</div>
-      </div>
-    );
-  }
-
   if (error) {
     return (
       <div className="products-container">
@@ -52,19 +42,24 @@ const Products = () => {
   }
 
   const handleOrderClick = (product) => {
-    console.log("Order clicked for product:", product);
     setSelectedProduct(product);
-    console.log("Selected product state updated:", product);
   };
 
   const handleCloseDetails = () => {
-    console.log("Closing product details");
     setSelectedProduct(null);
   };
 
   const handleConfirmOrder = (orderDetails) => {
     console.log("Order confirmed:", orderDetails);
     setSelectedProduct(null);
+  };
+
+  const handleCategoryClick = (categoryId) => {
+    // Smooth scroll to top of products grid
+    document
+      .querySelector(".product-grid")
+      ?.scrollIntoView({ behavior: "smooth", block: "start" });
+    setSelectedCategory(categoryId);
   };
 
   return (
@@ -83,9 +78,9 @@ const Products = () => {
       <div className="categories-scroll">
         <button
           className={`category-item ${
-            selectedCategory === "all" ? "active" : ""
+            selectedCategory === "0" ? "active" : ""
           }`}
-          onClick={() => setSelectedCategory("all")}
+          onClick={() => handleCategoryClick("0")}
         >
           All
         </button>
@@ -95,7 +90,7 @@ const Products = () => {
             className={`category-item ${
               selectedCategory === category.id ? "active" : ""
             }`}
-            onClick={() => setSelectedCategory(category.id)}
+            onClick={() => handleCategoryClick(category.id)}
           >
             {category.image && (
               <img
@@ -158,10 +153,7 @@ const Products = () => {
                 </div>
                 <button
                   className="customize-button"
-                  onClick={() => {
-                    console.log("Order button clicked for:", product.name);
-                    handleOrderClick(product);
-                  }}
+                  onClick={() => handleOrderClick(product)}
                 >
                   order now
                 </button>

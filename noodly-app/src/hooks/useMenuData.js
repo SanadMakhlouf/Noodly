@@ -5,9 +5,11 @@ export const useMenuData = () => {
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [selectedCategory, setSelectedCategory] = useState("0");
+  // Cache products by category
+  const [productCache, setProductCache] = useState({});
 
-  const API_URL =
-    "https://cors-anywhere.herokuapp.com/https://shopapi.aipsoft.com/app_request/get_data";
+  const API_URL = "/app_request/get_data";
 
   const fetchCategories = async () => {
     try {
@@ -59,13 +61,18 @@ export const useMenuData = () => {
     }
   };
 
-  const fetchProducts = async () => {
+  const fetchProducts = async (categoryId = "0") => {
+    // If we have cached products for this category, use them immediately
+    if (productCache[categoryId]) {
+      setProducts(productCache[categoryId]);
+    }
+
     try {
       const requestData = {
         request_type: "product",
         language: "english",
         shop_id: "17",
-        category_id: "0",
+        category_id: categoryId,
         sub_category_id: "0",
         access_token: "A#25t*4M",
         page_number: 1,
@@ -97,9 +104,14 @@ export const useMenuData = () => {
             price: parseFloat(product.price) || 0,
             discountedPrice: parseFloat(product.discounted_price) || 0,
             discountPercentage: parseFloat(product.disc_percentage) || 0,
-            customizable: true,
+            customizable: product.customisable === "1",
             description: product.unit_description || "",
-            category_id: product.category_id || "0",
+            category_id: product.category_id || categoryId,
+          }));
+          // Update cache and state
+          setProductCache((prev) => ({
+            ...prev,
+            [categoryId]: formattedProducts,
           }));
           setProducts(formattedProducts);
         } else {
@@ -112,25 +124,30 @@ export const useMenuData = () => {
     } catch (err) {
       console.error("Error fetching products:", err);
       setError("Failed to load products. Please try again later.");
-      setProducts([]);
+      if (!productCache[categoryId]) {
+        setProducts([]);
+      }
+    } finally {
+      setLoading(false);
     }
   };
 
+  // Fetch categories on mount
   useEffect(() => {
-    const fetchData = async () => {
-      setLoading(true);
-      setError(null);
-      try {
-        await Promise.all([fetchProducts(), fetchCategories()]);
-      } catch (err) {
-        setError(err.message);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchData();
+    fetchCategories();
   }, []);
 
-  return { products, categories, loading, error };
+  // Fetch products when selected category changes
+  useEffect(() => {
+    fetchProducts(selectedCategory);
+  }, [selectedCategory]);
+
+  return {
+    products,
+    categories,
+    loading,
+    error,
+    selectedCategory,
+    setSelectedCategory,
+  };
 };

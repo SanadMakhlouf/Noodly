@@ -40,6 +40,7 @@
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   gap: 25px;
   padding: 10px 0;
+  min-height: 200px; /* Minimum height to prevent layout shift */
 }
 
 .product-card {
@@ -48,9 +49,22 @@
   overflow: hidden;
   transition: all 0.3s ease;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
-  border: 2px solid #3498db;
+  border: 2px solid var(--noodly-blue);
   position: relative;
   pointer-events: auto;
+  animation: fadeIn 0.3s ease-out;
+  opacity: 1;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .product-card::before {
@@ -77,7 +91,7 @@
 .product-card:hover {
   transform: translateY(-5px);
   box-shadow: 0 8px 25px rgba(52, 152, 219, 0.15);
-  border-color: #2980b9;
+  border-color: var(--noodly-blue);
 }
 
 .product-image-container {
@@ -237,14 +251,18 @@
 }
 
 .categories-scroll {
-  width: 100%;
-  overflow-x: auto;
-  white-space: nowrap;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: #f8f9fa;
   padding: 15px 0;
   margin-bottom: 20px;
+  overflow-x: auto;
+  white-space: nowrap;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
   -ms-overflow-style: none;
+  scroll-behavior: smooth;
 }
 
 .categories-scroll::-webkit-scrollbar {
@@ -264,6 +282,8 @@
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
   font-weight: 500;
   color: #2d3436;
+  position: relative;
+  overflow: hidden;
 }
 
 .category-item:last-child {
@@ -283,12 +303,33 @@
   transform: translateY(-2px);
 }
 
+.category-item::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 3px;
+  background: linear-gradient(45deg, #3498db, #2980b9);
+  transform: scaleX(0);
+  transition: transform 0.3s ease;
+}
+
+.category-item.active::after {
+  transform: scaleX(1);
+}
+
 .category-image {
   width: 24px;
   height: 24px;
   margin-right: 8px;
   border-radius: 50%;
   object-fit: cover;
+  transition: transform 0.3s ease;
+}
+
+.category-item:hover .category-image {
+  transform: scale(1.1);
 }
 
 .category-item span {
