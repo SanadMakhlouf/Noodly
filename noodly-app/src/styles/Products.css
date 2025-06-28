@@ -295,3 +295,44 @@
   font-size: 14px;
   font-weight: 500;
 }
+
+.search-results {
+  text-align: center;
+  margin: 10px 0;
+  color: #666;
+  font-size: 1.1em;
+}
+
+.search-match {
+  animation: highlight 1s ease-out;
+  border: 2px solid #4caf50;
+}
+
+@keyframes highlight {
+  0% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(76, 175, 80, 0.4);
+  }
+  50% {
+    transform: scale(1.02);
+    box-shadow: 0 0 0 10px rgba(76, 175, 80, 0);
+  }
+  100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(76, 175, 80, 0);
+  }
+}
+
+.search-button {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.search-button:hover .search-icon {
+  color: #4caf50;
+}

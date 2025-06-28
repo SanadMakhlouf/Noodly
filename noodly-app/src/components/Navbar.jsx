@@ -1,8 +1,33 @@
-import React from "react";
-import { Link } from "react-router-dom";
+import React, { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { useMenuData } from "../hooks/useMenuData";
 import "../styles/Navbar.css";
 
 function Navbar() {
+  const [searchTerm, setSearchTerm] = useState("");
+  const { products } = useMenuData();
+  const navigate = useNavigate();
+
+  const handleSearch = (e) => {
+    e.preventDefault();
+    if (searchTerm.trim()) {
+      console.log("Searching for:", searchTerm);
+      console.log("Available products:", products);
+
+      const searchResults = products.filter((product) =>
+        product.name.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+
+      console.log("Search results:", searchResults);
+
+      // Navigate to products page with search term
+      navigate(`/products?search=${encodeURIComponent(searchTerm)}`);
+
+      // Clear search input
+      setSearchTerm("");
+    }
+  };
+
   return (
     <nav className="navbar">
       <div className="container navbar-container">
@@ -25,25 +50,33 @@ function Navbar() {
           </Link>
         </div>
 
-        <div className="search-container">
-          <input type="text" placeholder="Search..." className="search-input" />
-          <svg
-            className="search-icon"
-            width="20"
-            height="20"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-            />
-          </svg>
-        </div>
+        <form onSubmit={handleSearch} className="search-container">
+          <input
+            type="text"
+            placeholder="Search products..."
+            className="search-input"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+          <button type="submit" className="search-button">
+            <svg
+              className="search-icon"
+              width="20"
+              height="20"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+              />
+            </svg>
+          </button>
+        </form>
       </div>
     </nav>
   );

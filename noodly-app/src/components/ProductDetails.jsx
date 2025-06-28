@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import "../styles/ProductDetails.css";
 
 const ProductDetails = ({ product, onClose, onConfirm }) => {
@@ -12,6 +12,11 @@ const ProductDetails = ({ product, onClose, onConfirm }) => {
     carColor: "",
     carPlate: "",
   });
+
+  useEffect(() => {
+    console.log("Selected Product ID:", product.id);
+    console.log("Selected Product Details:", product);
+  }, [product]);
 
   const handleIncrement = () => {
     setQuantity((prev) => prev + 1);

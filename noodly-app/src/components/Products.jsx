@@ -1,5 +1,6 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useMenuData } from "../hooks/useMenuData";
+import { useLocation } from "react-router-dom";
 import "../styles/Products.css";
 import logo from "../assets/img40-removebg-preview.png";
 import ProductDetails from "./ProductDetails";
@@ -8,6 +9,31 @@ const Products = () => {
   const { products, categories, loading, error } = useMenuData();
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [selectedProduct, setSelectedProduct] = useState(null);
+  const location = useLocation();
+  const searchParams = new URLSearchParams(location.search);
+  const searchQuery = searchParams.get("search") || "";
+
+  // Filter products based on both category and search term
+  const filteredProducts = products.filter((product) => {
+    const matchesCategory =
+      selectedCategory === "all" || product.category_id === selectedCategory;
+    const matchesSearch =
+      searchQuery === "" ||
+      product.name.toLowerCase().includes(searchQuery.toLowerCase());
+    return matchesCategory && matchesSearch;
+  });
+
+  // Scroll to matching product if search query exists
+  useEffect(() => {
+    if (searchQuery && filteredProducts.length > 0) {
+      const firstMatch = document.getElementById(
+        `product-${filteredProducts[0].id}`
+      );
+      if (firstMatch) {
+        firstMatch.scrollIntoView({ behavior: "smooth", block: "center" });
+      }
+    }
+  }, [searchQuery, filteredProducts]);
 
   if (loading) {
     return (
@@ -25,11 +51,6 @@ const Products = () => {
     );
   }
 
-  const filteredProducts =
-    selectedCategory === "all"
-      ? products
-      : products.filter((product) => product.category_id === selectedCategory);
-
   const handleOrderClick = (product) => {
     console.log("Order clicked for product:", product);
     setSelectedProduct(product);
@@ -46,14 +67,17 @@ const Products = () => {
     setSelectedProduct(null);
   };
 
-  console.log("Current selected product:", selectedProduct);
-  console.log("Filtered products:", filteredProducts);
-
   return (
     <div className="products-container">
       <div className="products-header">
         <img src={logo} alt="Noodly Logo" className="header-logo" />
         <h1 className="products-title">Our Menu</h1>
+        {searchQuery && (
+          <p className="search-results">
+            Search results for: "{searchQuery}" ({filteredProducts.length} items
+            found)
+          </p>
+        )}
       </div>
 
       <div className="categories-scroll">
@@ -91,7 +115,16 @@ const Products = () => {
 
       <div className="product-grid">
         {filteredProducts.map((product) => (
-          <div key={product.id} className="product-card">
+          <div
+            key={product.id}
+            id={`product-${product.id}`}
+            className={`product-card ${
+              searchQuery &&
+              product.name.toLowerCase().includes(searchQuery.toLowerCase())
+                ? "search-match"
+                : ""
+            }`}
+          >
             <div className="product-image-container">
               <img
                 className="product-image"
