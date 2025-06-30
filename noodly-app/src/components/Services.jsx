@@ -6,8 +6,10 @@ function ServiceCard({ icon, title, description }) {
   return (
     <div className="service-card">
       <div className="service-icon">{icon}</div>
-      <h3 className="service-title">{title}</h3>
-      <p className="service-text">{description}</p>
+      <div className="service-content">
+        <h3 className="service-title">{title}</h3>
+        <p className="service-text">{description}</p>
+      </div>
     </div>
   );
 }
@@ -23,17 +25,17 @@ function Services() {
           <ServiceCard
             icon={<i className="fa-solid fa-box"></i>}
             title="YOUR ORDER"
-            description="Lorem ipsum dolor sit amet, consectetur adipiscing elit. Ut elit tellus luctus nec ullamcorper mattis."
+            description="Choose your favorite noodles and customize them to your taste"
           />
           <ServiceCard
             icon={<i className="fa-solid fa-motorcycle"></i>}
             title="WE DELIVER"
-            description="Lorem ipsum dolor sit amet, consectetur adipiscing elit. Ut elit tellus luctus nec ullamcorper mattis."
+            description="Fast and reliable delivery right to your doorstep"
           />
           <ServiceCard
             icon={<i className="fa-solid fa-utensils"></i>}
             title="ENJOY FRESH FOOD"
-            description="Lorem ipsum dolor sit amet, consectetur adipiscing elit. Ut elit tellus luctus nec ullamcorper mattis."
+            description="Savor the delicious taste of freshly prepared noodles"
           />
         </div>
       </div>

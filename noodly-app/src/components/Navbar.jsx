@@ -5,6 +5,7 @@ import "../styles/Navbar.css";
 
 function Navbar() {
   const [searchTerm, setSearchTerm] = useState("");
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { products } = useMenuData();
   const navigate = useNavigate();
 
@@ -25,30 +26,28 @@ function Navbar() {
 
       // Clear search input
       setSearchTerm("");
+      setIsMenuOpen(false);
     }
+  };
+
+  const toggleMenu = () => {
+    setIsMenuOpen(!isMenuOpen);
+  };
+
+  const handleNavClick = () => {
+    setIsMenuOpen(false);
   };
 
   return (
     <nav className="navbar">
       <div className="container navbar-container">
-        <Link to="/" className="logo">
+        <Link to="/" className="logo" onClick={handleNavClick}>
           Noodly
         </Link>
 
-        <div className="nav-links">
-          <Link to="/" className="nav-link">
-            HOME
-          </Link>
-          <a href="#menu" className="nav-link">
-            MENU
-          </a>
-          <a href="#service" className="nav-link">
-            SERVICE
-          </a>
-          <Link to="/products" className="nav-link">
-            PRODUCTS
-          </Link>
-        </div>
+        <button className="mobile-menu-button" onClick={toggleMenu}>
+          <i className={`fas fa-${isMenuOpen ? "times" : "bars"}`}></i>
+        </button>
 
         <form onSubmit={handleSearch} className="search-container">
           <input
@@ -59,24 +58,24 @@ function Navbar() {
             onChange={(e) => setSearchTerm(e.target.value)}
           />
           <button type="submit" className="search-button">
-            <svg
-              className="search-icon"
-              width="20"
-              height="20"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-              />
-            </svg>
+            <i className="fas fa-search"></i>
           </button>
         </form>
+
+        <div className={`nav-links ${isMenuOpen ? "active" : ""}`}>
+          <Link to="/" className="nav-link" onClick={handleNavClick}>
+            HOME
+          </Link>
+          <a href="#menu" className="nav-link" onClick={handleNavClick}>
+            MENU
+          </a>
+          <a href="#service" className="nav-link" onClick={handleNavClick}>
+            SERVICE
+          </a>
+          <Link to="/products" className="nav-link" onClick={handleNavClick}>
+            PRODUCTS
+          </Link>
+        </div>
       </div>
     </nav>
   );
