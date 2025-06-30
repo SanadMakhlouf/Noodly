@@ -49,38 +49,25 @@ export const useOrderSubmission = () => {
         {
           method: "POST",
           body: formData,
-          headers: {
-            Accept: "application/json",
-          },
         }
       );
 
-      // Check if response is JSON
-      const contentType = response.headers.get("content-type");
-      if (!contentType || !contentType.includes("application/json")) {
-        throw new Error(
-          "Server returned non-JSON response. Please try again later."
-        );
-      }
-
-      const data = await response.json();
-
-      if (data.response_code === "1") {
+      if (response.ok) {
         setOrderSuccess(true);
         return {
           success: true,
-          orderId: data.response_data?.order_id || "PENDING",
-          message: data.response_text,
+          orderId: "PENDING",
+          message: "Order submitted successfully",
         };
       } else {
-        throw new Error(data.response_text || "Failed to submit order");
+        throw new Error("Failed to submit order");
       }
     } catch (err) {
       console.error("Error submitting order:", err);
-      setError(err.message || "Failed to submit order. Please try again.");
+      setError("Failed to submit order. Please try again.");
       return {
         success: false,
-        error: err.message || "Failed to submit order. Please try again.",
+        error: "Failed to submit order. Please try again.",
       };
     } finally {
       setLoading(false);

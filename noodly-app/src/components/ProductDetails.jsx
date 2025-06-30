@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useOrderSubmission } from "../hooks/useOrderSubmission";
 import "../styles/ProductDetails.css";
 
 const ProductDetails = ({ product, onClose, onConfirm }) => {
@@ -12,6 +13,17 @@ const ProductDetails = ({ product, onClose, onConfirm }) => {
     carColor: "",
     carPlate: "",
   });
+  const [selectedDeliveryTime, setSelectedDeliveryTime] = useState("");
+  const [selectedDeliveryDate, setSelectedDeliveryDate] = useState("");
+  const [paymentMethod, setPaymentMethod] = useState("COD");
+  const [error, setError] = useState("");
+
+  const {
+    submitOrder,
+    loading,
+    error: submitError,
+    orderSuccess,
+  } = useOrderSubmission();
 
   useEffect(() => {
     console.log("Selected Product ID:", product.id);
@@ -50,15 +62,48 @@ const ProductDetails = ({ product, onClose, onConfirm }) => {
     }
   };
 
-  const handleConfirm = () => {
-    onConfirm({
-      ...product,
-      quantity,
-      specialInstructions,
-      phoneNumber,
-      customerInfo,
-      totalPrice: (product.discountedPrice || product.price) * quantity,
-    });
+  const handleConfirm = async () => {
+    const price = product.discountedPrice || product.price;
+    const totalPrice = price * quantity;
+    const taxRate = 0.05; // 5% tax rate
+    const taxAmount = totalPrice * taxRate;
+    const taxLessAmount = totalPrice - taxAmount;
+
+    const orderData = {
+      taxLessAmount,
+      taxAmount,
+      products: [
+        {
+          id: product.id,
+          quantity,
+          price,
+          name: product.name,
+          addons: [], // Add addon support if needed
+        },
+      ],
+      customerId: phoneNumber,
+      addressId: "1", // You might want to make this dynamic
+      deliveryTime: selectedDeliveryTime,
+      deliveryDate: selectedDeliveryDate,
+      paymentMethod,
+    };
+
+    try {
+      const result = await submitOrder(orderData);
+
+      if (result.success) {
+        onConfirm({
+          ...orderData,
+          orderId: result.orderId,
+          customerInfo,
+          specialInstructions,
+        });
+      } else {
+        setError(result.error);
+      }
+    } catch (err) {
+      setError("Failed to submit order. Please try again.");
+    }
   };
 
   const renderStep1 = () => (
@@ -235,92 +280,126 @@ const ProductDetails = ({ product, onClose, onConfirm }) => {
   const renderStep4 = () => (
     <div className="product-details-content">
       <h2 className="step-title">Order Summary</h2>
+
+      <div className="delivery-details">
+        <div className="form-group">
+          <label htmlFor="deliveryDate">Delivery Date:</label>
+          <input
+            type="date"
+            id="deliveryDate"
+            value={selectedDeliveryDate}
+            onChange={(e) => setSelectedDeliveryDate(e.target.value)}
+            min={new Date().toISOString().split("T")[0]}
+            required
+          />
+        </div>
+
+        <div className="form-group">
+          <label htmlFor="deliveryTime">Delivery Time:</label>
+          <select
+            id="deliveryTime"
+            value={selectedDeliveryTime}
+            onChange={(e) => setSelectedDeliveryTime(e.target.value)}
+            required
+          >
+            <option value="">Select a time slot</option>
+            <option value="09:00-10:00">9:00 AM - 10:00 AM</option>
+            <option value="10:00-11:00">10:00 AM - 11:00 AM</option>
+            <option value="11:00-12:00">11:00 AM - 12:00 PM</option>
+            <option value="12:00-13:00">12:00 PM - 1:00 PM</option>
+            <option value="13:00-14:00">1:00 PM - 2:00 PM</option>
+            <option value="14:00-15:00">2:00 PM - 3:00 PM</option>
+            <option value="15:00-16:00">3:00 PM - 4:00 PM</option>
+            <option value="16:00-17:00">4:00 PM - 5:00 PM</option>
+          </select>
+        </div>
+
+        <div className="form-group">
+          <label htmlFor="paymentMethod">Payment Method:</label>
+          <select
+            id="paymentMethod"
+            value={paymentMethod}
+            onChange={(e) => setPaymentMethod(e.target.value)}
+            required
+          >
+            <option value="COD">Cash on Delivery</option>
+          </select>
+        </div>
+      </div>
+
       <div className="order-summary">
-        <div className="summary-item order-details">
-          <h3>Your Order</h3>
-          <div className="order-item">
-            <img
-              src={product.image}
-              alt={product.name}
-              className="summary-image"
-              onError={(e) => {
-                e.target.onerror = null;
-                e.target.src = "/images/noodle-placeholder.jpg";
-              }}
-            />
-            <div className="order-item-details">
-              <h4>{product.name}</h4>
-              <p>Quantity: {quantity}</p>
-              <p className="item-price">
-                Price: $
-                {(
-                  (product.discountedPrice || product.price) * quantity
-                ).toFixed(2)}
-              </p>
-            </div>
-          </div>
-          {specialInstructions && (
-            <div className="special-notes">
-              <strong>Special Instructions:</strong>
-              <p>{specialInstructions}</p>
-            </div>
-          )}
-        </div>
+        <h3>Order Details</h3>
+        <p>
+          <strong>Product:</strong> {product.name}
+        </p>
+        <p>
+          <strong>Quantity:</strong> {quantity}
+        </p>
+        <p>
+          <strong>Price per item:</strong> $
+          {(product.discountedPrice || product.price).toFixed(2)}
+        </p>
+        <p>
+          <strong>Total:</strong> $
+          {((product.discountedPrice || product.price) * quantity).toFixed(2)}
+        </p>
 
-        <div className="summary-item">
-          <h3>Contact Information</h3>
-          <p>Phone: {phoneNumber}</p>
-        </div>
+        <h3>Customer Details</h3>
+        <p>
+          <strong>Name:</strong> {customerInfo.name}
+        </p>
+        <p>
+          <strong>Phone:</strong> {phoneNumber}
+        </p>
+        <p>
+          <strong>Car Model:</strong> {customerInfo.carModel}
+        </p>
+        <p>
+          <strong>Car Color:</strong> {customerInfo.carColor}
+        </p>
+        <p>
+          <strong>Car Plate:</strong> {customerInfo.carPlate}
+        </p>
 
-        <div className="summary-item">
-          <h3>Car Details</h3>
-          <p>Name: {customerInfo.name}</p>
-          <p>Car Model: {customerInfo.carModel}</p>
-          <p>Car Color: {customerInfo.carColor}</p>
-          <p>Car Plate: {customerInfo.carPlate}</p>
-        </div>
+        {specialInstructions && (
+          <>
+            <h3>Special Instructions</h3>
+            <p>{specialInstructions}</p>
+          </>
+        )}
 
-        <div className="summary-item payment-method">
-          <h3>Payment Method</h3>
-          <div className="payment-badge">
-            <span className="arabic-text">الدفع عند الاستلام</span>
-            <span className="english-text">Cash on Delivery</span>
-          </div>
-        </div>
-
-        <div className="summary-item total-amount">
-          <div className="total-row">
-            <span>Subtotal:</span>
-            <span>
-              $
-              {((product.discountedPrice || product.price) * quantity).toFixed(
-                2
-              )}
-            </span>
-          </div>
-          <div className="total-row grand-total">
-            <span>Total Amount:</span>
-            <span>
-              $
-              {((product.discountedPrice || product.price) * quantity).toFixed(
-                2
-              )}
-            </span>
-          </div>
-        </div>
+        {submitError && <div className="error-message">{submitError}</div>}
       </div>
 
       <div className="button-group">
         <button className="back-button" onClick={handlePrevStep}>
           Back
         </button>
-        <button className="confirm-button" onClick={handleConfirm}>
-          <span className="arabic-text">تأكيد الطلب</span>
-          <span className="english-text">Confirm Order</span>
+        <button
+          className="confirm-button"
+          onClick={handleConfirm}
+          disabled={loading || !selectedDeliveryDate || !selectedDeliveryTime}
+        >
+          {loading ? "Placing Order..." : "Confirm Order"}
         </button>
       </div>
     </div>
   );
+
+  const renderCurrentStep = () => {
+    switch (step) {
+      case 1:
+        return renderStep1();
+      case 2:
+        return renderStep2();
+      case 3:
+        return renderStep3();
+      case 4:
+        return renderStep4();
+      default:
+        return null;
+    }
+  };
 
   return (
     <div className="product-details-overlay">
@@ -328,16 +407,7 @@ const ProductDetails = ({ product, onClose, onConfirm }) => {
         <button className="close-button" onClick={onClose}>
           ×
         </button>
-        <div className="step-indicator">
-          <div className={`step ${step >= 1 ? "active" : ""}`}>1</div>
-          <div className={`step ${step >= 2 ? "active" : ""}`}>2</div>
-          <div className={`step ${step >= 3 ? "active" : ""}`}>3</div>
-          <div className={`step ${step >= 4 ? "active" : ""}`}>4</div>
-        </div>
-        {step === 1 && renderStep1()}
-        {step === 2 && renderStep2()}
-        {step === 3 && renderStep3()}
-        {step === 4 && renderStep4()}
+        {renderCurrentStep()}
       </div>
     </div>
   );
