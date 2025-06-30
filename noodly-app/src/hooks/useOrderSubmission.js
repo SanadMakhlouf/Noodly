@@ -5,65 +5,70 @@ export const useOrderSubmission = () => {
   const [error, setError] = useState(null);
   const [orderSuccess, setOrderSuccess] = useState(false);
 
+  const generateOrderId = () =>
+    `ORD-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+
   const submitOrder = async (orderData) => {
     setLoading(true);
     setError(null);
     setOrderSuccess(false);
 
     try {
-      // Prepare the order data with required parameters
-      const formData = new FormData();
-      formData.append("request_type", "save_order");
-      formData.append("shop_id", "17");
-      formData.append("access_token", "A#25t*4M");
+      const orderId = generateOrderId();
 
-      // Add order details
-      formData.append("tax_less_amount", orderData.taxLessAmount.toString());
-      formData.append("tax_amount", orderData.taxAmount.toString());
-      formData.append(
-        "total_amount",
-        (orderData.taxLessAmount + orderData.taxAmount).toString()
-      );
-      formData.append("delivery_date", orderData.deliveryDate);
-      formData.append("delivery_time", orderData.deliveryTime);
-      formData.append("payment_method", orderData.paymentMethod);
-      formData.append("customer_id", orderData.customerId);
-      formData.append("address_id", orderData.addressId);
-
-      // Add products
-      orderData.products.forEach((product, index) => {
-        formData.append(`product_id[${index}]`, product.id);
-        formData.append(`product_qty[${index}]`, product.quantity.toString());
-        formData.append(`product_price[${index}]`, product.price.toString());
-        formData.append(`product_name[${index}]`, product.name);
-        if (product.addons && product.addons.length > 0) {
-          formData.append(
-            `product_addons[${index}]`,
-            JSON.stringify(product.addons)
-          );
-        }
-      });
+      const jsonData = {
+        request_type: "save_order",
+        shop_id: "17",
+        access_token: "A#25t*4M",
+        tax_less_amount: orderData.taxLessAmount.toString(),
+        tax_amount: orderData.taxAmount,
+        products: orderData.products.map((product) => ({
+          id: product.id,
+          name: product.name,
+          is_multi_unit: "FALSE",
+          unit_id: 1602,
+          price: product.price,
+          product_image: product.image || "",
+          quantity: product.quantity,
+          comments: "",
+          addons: product.addons || [],
+          customize: "1",
+          cart_id: 1,
+          addon_total_price: 0,
+          total_price: (product.price * product.quantity).toFixed(2),
+        })),
+        address_id: orderData.addressId,
+        pm_id: "352",
+        delivery_time: orderData.deliveryTime || "",
+        pickup_time: "",
+        lat: "24.483019805499488",
+        lng: "54.349997706376534",
+        delivery_time_required: "",
+        pickup_time_required: "",
+        delivery_charge: "10",
+        vehicle_info: null,
+      };
 
       const response = await fetch(
         "https://shopapi.aipsoft.com/app_request/get_data",
         {
           method: "POST",
-          body: formData,
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(jsonData),
         }
       );
 
-      if (response.ok) {
-        setOrderSuccess(true);
-        return {
-          success: true,
-          orderId: "PENDING",
-          message: "Order submitted successfully",
-        };
-      } else {
-        throw new Error("Failed to submit order");
-      }
+      if (!response.ok) throw new Error("Failed to submit order");
+
+      setOrderSuccess(true);
+      return {
+        success: true,
+        orderId,
+        message: "Order submitted successfully",
+      };
     } catch (err) {
-      console.error("Error submitting order:", err);
       setError("Failed to submit order. Please try again.");
       return {
         success: false,
@@ -74,10 +79,5 @@ export const useOrderSubmission = () => {
     }
   };
 
-  return {
-    submitOrder,
-    loading,
-    error,
-    orderSuccess,
-  };
+  return { submitOrder, loading, error, orderSuccess };
 };
