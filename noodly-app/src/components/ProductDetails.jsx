@@ -81,7 +81,9 @@ const ProductDetails = ({ product, onClose, onConfirm }) => {
           addons: [], // Add addon support if needed
         },
       ],
-      customerId: phoneNumber,
+      phoneNumber: phoneNumber,
+      firstName: customerInfo.name,
+      lastName: "",
       addressId: "1", // You might want to make this dynamic
       deliveryTime: selectedDeliveryTime,
       deliveryDate: selectedDeliveryDate,

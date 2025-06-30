@@ -8,6 +8,58 @@ export const useOrderSubmission = () => {
   const generateOrderId = () =>
     `ORD-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
 
+  const formatPhoneNumber = (phone) => {
+    const digits = phone.replace(/\D/g, "");
+    if (digits.startsWith("971")) return `+${digits}`;
+    if (digits.startsWith("0")) return `+971${digits.substring(1)}`;
+    return `+971${digits}`;
+  };
+
+  const registerCustomer = async ({
+    firstName = "Guest",
+    lastName = "",
+    phoneNumber,
+  }) => {
+    try {
+      const formattedPhone = formatPhoneNumber(phoneNumber);
+      const registerData = {
+        request_type: "user_registration",
+        app_id: "16",
+        shop_id: "17",
+        access_token: "A#25t*4M",
+        language: "english",
+        first_name: firstName,
+        email: "",
+        mobile_no: formattedPhone,
+      };
+
+      const response = await fetch(
+        "https://shopapi.aipsoft.com/app_request/get_data",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(registerData),
+        }
+      );
+
+      const data = await response.json();
+      console.log("Registration response:", data);
+
+      if (data.response_code === "1" && data.response_data?.response_data?.user_id) {
+        const pmId = data.response_data.response_data.user_id.toString();
+        localStorage.setItem("pm_id", pmId);
+        console.log("Successfully registered user with PM_ID:", pmId);
+        return pmId;
+      }
+
+      console.warn("Invalid registration response. Using fallback pm_id.");
+      return "352";
+    } catch (err) {
+      console.error("Registration error:", err);
+      return "352"; // fallback
+    }
+  };
+
   const submitOrder = async (orderData) => {
     setLoading(true);
     setError(null);
@@ -16,7 +68,13 @@ export const useOrderSubmission = () => {
     try {
       const orderId = generateOrderId();
 
-      const jsonData = {
+      const pmId = await registerCustomer({
+        firstName: orderData.firstName,
+        lastName: orderData.lastName,
+        phoneNumber: orderData.phoneNumber,
+      });
+
+      const orderPayload = {
         request_type: "save_order",
         shop_id: "17",
         access_token: "A#25t*4M",
@@ -37,8 +95,8 @@ export const useOrderSubmission = () => {
           addon_total_price: 0,
           total_price: (product.price * product.quantity).toFixed(2),
         })),
-        address_id: orderData.addressId,
-        pm_id: "352",
+        address_id: orderData.addressId || "123",
+        pm_id: pmId,
         delivery_time: orderData.deliveryTime || "",
         pickup_time: "",
         lat: "24.483019805499488",
@@ -53,10 +111,8 @@ export const useOrderSubmission = () => {
         "https://shopapi.aipsoft.com/app_request/get_data",
         {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(jsonData),
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(orderPayload),
         }
       );
 
@@ -69,6 +125,7 @@ export const useOrderSubmission = () => {
         message: "Order submitted successfully",
       };
     } catch (err) {
+      console.error("Order submission error:", err);
       setError("Failed to submit order. Please try again.");
       return {
         success: false,
