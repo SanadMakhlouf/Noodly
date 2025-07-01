@@ -1,13 +1,15 @@
 import React, { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useMenuData } from "../hooks/useMenuData";
 import "../styles/Navbar.css";
+import logo from "../assets/img40-removebg-preview.png";
 
 function Navbar() {
   const [searchTerm, setSearchTerm] = useState("");
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { products } = useMenuData();
   const navigate = useNavigate();
+  const location = useLocation();
 
   const handleSearch = (e) => {
     e.preventDefault();
@@ -38,11 +40,30 @@ function Navbar() {
     setIsMenuOpen(false);
   };
 
+  const handleSectionClick = (sectionId) => {
+    handleNavClick(); // Close mobile menu
+
+    if (location.pathname !== "/") {
+      // If we're not on the home page, navigate to home first
+      navigate("/?section=" + sectionId);
+    } else {
+      // If we're already on the home page, scroll to the section
+      const element = document.getElementById(sectionId);
+      if (element) {
+        element.scrollIntoView({ behavior: "smooth" });
+      }
+    }
+  };
+
   return (
     <nav className="navbar">
       <div className="container navbar-container">
-        <Link to="/" className="logo" onClick={handleNavClick}>
-          Noodly
+        <Link
+          to="/"
+          className="logo"
+          onClick={() => handleSectionClick("hero")}
+        >
+          <img src={logo} alt="Noodly Logo" className="navbar-logo" />
         </Link>
 
         <button className="mobile-menu-button" onClick={toggleMenu}>
@@ -63,15 +84,24 @@ function Navbar() {
         </form>
 
         <div className={`nav-links ${isMenuOpen ? "active" : ""}`}>
-          <Link to="/" className="nav-link" onClick={handleNavClick}>
+          <button
+            className="nav-link"
+            onClick={() => handleSectionClick("hero")}
+          >
             HOME
-          </Link>
-          <a href="#menu" className="nav-link" onClick={handleNavClick}>
+          </button>
+          <button
+            className="nav-link"
+            onClick={() => handleSectionClick("menu")}
+          >
             MENU
-          </a>
-          <a href="#service" className="nav-link" onClick={handleNavClick}>
-            SERVICE
-          </a>
+          </button>
+          <button
+            className="nav-link"
+            onClick={() => handleSectionClick("contact")}
+          >
+            CONTACT
+          </button>
           <Link to="/products" className="nav-link" onClick={handleNavClick}>
             PRODUCTS
           </Link>

@@ -14,7 +14,7 @@ function ContactCard({ icon, title, subtitle }) {
 
 function Contact() {
   return (
-    <section className="contact">
+    <section className="contact" id="contact">
       <div className="container contact-container">
         <div className="contact-grid">
           <ContactCard

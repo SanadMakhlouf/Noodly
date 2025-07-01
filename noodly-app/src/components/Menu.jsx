@@ -1,25 +1,30 @@
 import React from "react";
+import { useNavigate } from "react-router-dom";
 import "../styles/Menu.css";
 import noodle from "../assets/box1.png";
 
-function MenuItem({ name, description, price, image, spiceLevels }) {
+function MenuItem({ name, description, price }) {
+  const navigate = useNavigate();
+
+  const handleOrderClick = () => {
+    navigate(`/products?search=${encodeURIComponent(name)}`);
+  };
+
   return (
     <div className="menu-card">
       <div className="menu-image">
-        {image ? <img src={image} alt={name} /> : name}
+        <img src={noodle} alt={name} />
       </div>
       <div className="menu-content">
         <div>
           <h3 className="menu-title">{name}</h3>
           <p className="menu-description">{description}</p>
-          <div className="menu-size">CHOOSE SPICE LEVEL :</div>
-          <div className="menu-sizes">
-            {spiceLevels || "NORMAL, MEDIUM, SPICY"}
-          </div>
         </div>
         <div className="menu-price-container">
-          <button className="menu-button">ORDER NOW</button>
-          <div className="menu-price">{price}</div>
+          <button className="menu-button" onClick={handleOrderClick}>
+            ORDER NOW
+          </button>
+          <div className="menu-price">${Number(price).toFixed(2)}</div>
         </div>
       </div>
     </div>
@@ -29,33 +34,29 @@ function MenuItem({ name, description, price, image, spiceLevels }) {
 function Menu() {
   const menuItems = [
     {
-      name: "KOREAN",
-      description: "CHILI KOREAN SAUCE, NOODLY SPECIAL SPICES, PEPPERS.",
-      price: "35 AED",
-      image: noodle,
+      name: "Cheesy 2",
+      description: "Delicious noodles with special ingredients",
+      price: 30.0,
     },
     {
-      name: "SOYA",
-      description: "SOYA SAUCE, FRESH VEGETABLES, NOODLY SPECIAL HERBS.",
-      price: "35 AED",
-      image: noodle,
+      name: "Soya",
+      description: "Delicious noodles with special ingredients",
+      price: 30.0,
     },
     {
-      name: "CHEESY",
-      description: "CREAMY CHEESE SAUCE, SPECIAL TOPPINGS, HERBS.",
-      price: "35 AED",
-      image: noodle,
+      name: "Korean",
+      description: "Delicious noodles with special ingredients",
+      price: 30.0,
     },
     {
-      name: "SPICY",
-      description: "HOT CHILI SAUCE, NOODLY SPECIAL SPICES, VEGETABLES.",
-      price: "35 AED",
-      image: noodle,
+      name: "Korean",
+      description: "Delicious noodles with special ingredients",
+      price: 30.0,
     },
   ];
 
   return (
-    <section className="menu">
+    <section className="menu" id="menu">
       <div className="container">
         <div className="menu-grid">
           {menuItems.map((item, index) => (

@@ -4,7 +4,7 @@ import product from "../assets/product.png";
 
 function Hero() {
   return (
-    <section className="hero">
+    <section className="hero" id="hero">
       <div className="container hero-container">
         <div className="hero-content">
           <h1 className="hero-title">ORDER YOUR</h1>
