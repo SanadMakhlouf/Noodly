@@ -32,6 +32,8 @@ function MenuItem({ name, description, price }) {
 }
 
 function Menu() {
+  const navigate = useNavigate();
+
   const menuItems = [
     {
       name: "Cheesy 2",
@@ -55,6 +57,10 @@ function Menu() {
     },
   ];
 
+  const handleSeeMore = () => {
+    navigate("/products");
+  };
+
   return (
     <section className="menu" id="menu">
       <div className="container">
@@ -62,6 +68,11 @@ function Menu() {
           {menuItems.map((item, index) => (
             <MenuItem key={index} {...item} />
           ))}
+        </div>
+        <div className="see-more-container">
+          <button className="see-more-button" onClick={handleSeeMore}>
+            See More Products
+          </button>
         </div>
       </div>
     </section>

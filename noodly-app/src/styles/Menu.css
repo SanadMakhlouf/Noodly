@@ -154,3 +154,29 @@
   color: #ff4757;
   background: rgba(255, 71, 87, 0.1);
 }
+
+.see-more-container {
+  display: flex;
+  justify-content: center;
+  margin-top: 40px;
+}
+
+.see-more-button {
+  padding: 12px 30px;
+  font-size: 1.1em;
+  background: linear-gradient(45deg, var(--noodly-blue), var(--noodly-blue));
+  color: white;
+  border: none;
+  border-radius: 25px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-transform: uppercase;
+  font-weight: 600;
+  letter-spacing: 1px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.see-more-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(var(--noodly-blue-rgb), 0.2);
+}

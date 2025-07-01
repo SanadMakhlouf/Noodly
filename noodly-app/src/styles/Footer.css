@@ -11,9 +11,20 @@
   gap: 30px;
 }
 
+.footer-logo-container {
+  display: flex;
+  align-items: center;
+}
+
 .footer-logo {
-  font-size: 28px;
-  font-weight: bold;
+  width: 120px;
+  height: auto;
+  object-fit: contain;
+  transition: transform 0.3s ease;
+}
+
+.footer-logo:hover {
+  transform: scale(1.05);
 }
 
 .footer-title {

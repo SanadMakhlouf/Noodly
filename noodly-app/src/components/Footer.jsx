@@ -1,12 +1,13 @@
 import React from "react";
 import "../styles/Footer.css";
+import logo from "../assets/img40-removebg-preview.png";
 
 function Footer() {
   return (
     <footer className="footer">
       <div className="container footer-container">
-        <div>
-          <div className="footer-logo">Noodly</div>
+        <div className="footer-logo-container">
+          <img src={logo} alt="Noodly Logo" className="footer-logo" />
         </div>
         <div>
           <h3 className="footer-title">OUR STORE</h3>

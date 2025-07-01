@@ -260,3 +260,34 @@
     height: 200px;
   }
 }
+
+@media screen and (max-width: 768px) {
+  .hero-container {
+    flex-direction: column;
+    text-align: center;
+    padding: 40px 20px;
+  }
+
+  .hero-image {
+    display: none;  /* Hide the image on mobile */
+  }
+
+  .hero-content {
+    width: 100%;
+    padding: 0;
+  }
+
+  .hero-title,
+  .hero-subtitle {
+    font-size: 2.5em;
+  }
+
+  .hero-text {
+    font-size: 1em;
+    margin: 20px auto;
+  }
+
+  .btn-primary {
+    margin: 0 auto;
+  }
+}
