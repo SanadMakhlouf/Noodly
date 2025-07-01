@@ -45,7 +45,10 @@ export const useOrderSubmission = () => {
       const data = await response.json();
       console.log("Registration response:", data);
 
-      if (data.response_code === "1" && data.response_data?.response_data?.user_id) {
+      if (
+        data.response_code === "1" &&
+        data.response_data?.response_data?.user_id
+      ) {
         const pmId = data.response_data.response_data.user_id.toString();
         localStorage.setItem("pm_id", pmId);
         console.log("Successfully registered user with PM_ID:", pmId);
