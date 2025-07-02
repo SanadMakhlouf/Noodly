@@ -10,6 +10,7 @@ const Products = () => {
   const { products, categories, error, selectedCategory, setSelectedCategory } =
     useMenuData();
   const [selectedProduct, setSelectedProduct] = useState(null);
+  const [showOrderStatus, setShowOrderStatus] = useState(false);
   const location = useLocation();
   const searchParams = new URLSearchParams(location.search);
   const searchQuery = searchParams.get("search") || "";
@@ -44,10 +45,12 @@ const Products = () => {
 
   const handleOrderClick = (product) => {
     setSelectedProduct(product);
+    setShowOrderStatus(false);
   };
 
   const handleCloseDetails = () => {
     setSelectedProduct(null);
+    setShowOrderStatus(false);
   };
 
   const handleConfirmOrder = (orderDetails) => {
@@ -61,6 +64,16 @@ const Products = () => {
       .querySelector(".product-grid")
       ?.scrollIntoView({ behavior: "smooth", block: "start" });
     setSelectedCategory(categoryId);
+  };
+
+  const toggleOrderStatus = () => {
+    // Create a dummy product for the status view
+    setSelectedProduct({
+      name: "Last Order",
+      price: 0,
+      id: "status-view",
+    });
+    setShowOrderStatus(true);
   };
 
   return (
@@ -183,11 +196,17 @@ const Products = () => {
           ))}
         </div>
 
+        {/* Floating Track Order Button */}
+        <button className="floating-track-button" onClick={toggleOrderStatus}>
+          <i className="fas fa-truck"></i>
+        </button>
+
         {selectedProduct && (
           <ProductDetails
             product={selectedProduct}
             onClose={handleCloseDetails}
             onConfirm={handleConfirmOrder}
+            showStatusOnly={showOrderStatus}
           />
         )}
       </div>

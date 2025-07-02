@@ -2,8 +2,13 @@ import React, { useState, useEffect } from "react";
 import { useOrderSubmission } from "../hooks/useOrderSubmission";
 import "../styles/ProductDetails.css";
 
-const ProductDetails = ({ product, onClose, onConfirm }) => {
-  const [step, setStep] = useState(1);
+const ProductDetails = ({
+  product,
+  onClose,
+  onConfirm,
+  showStatusOnly = false,
+}) => {
+  const [step, setStep] = useState(showStatusOnly ? 5 : 1);
   const [quantity, setQuantity] = useState(1);
   const [specialInstructions, setSpecialInstructions] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
@@ -14,23 +19,95 @@ const ProductDetails = ({ product, onClose, onConfirm }) => {
     carPlate: "",
   });
   const [selectedDeliveryTime, setSelectedDeliveryTime] = useState("");
-  const [selectedDeliveryDate, setSelectedDeliveryDate] = useState("");
+  const [selectedDeliveryDate, setSelectedDeliveryDate] = useState(
+    new Date().toISOString().split("T")[0]
+  );
   const [paymentMethod, setPaymentMethod] = useState("COD");
   const [error, setError] = useState("");
 
   const {
     submitOrder,
-    loading,
+    loading: orderLoading,
     error: submitError,
     orderSuccess,
     orderStatus,
+    firstOrderElement,
     getOrderStatus,
   } = useOrderSubmission();
 
+  // Load order details and fetch status when component mounts
   useEffect(() => {
-    console.log("Selected Product ID:", product.id);
-    console.log("Selected Product Details:", product);
-  }, [product]);
+    // If showing status only, load from localStorage
+    if (showStatusOnly) {
+      loadOrderDetailsAndFetchStatus();
+    }
+
+    // If we're at step 5 (after order placement), set up auto-refresh
+    if (step === 5) {
+      const statusInterval = setInterval(() => {
+        refreshOrderStatus();
+      }, 30000);
+
+      return () => clearInterval(statusInterval);
+    }
+  }, [step, showStatusOnly]);
+
+  // Function to load order details from localStorage
+  const loadOrderDetailsAndFetchStatus = () => {
+    const lastOrderId = localStorage.getItem("lastOrderId");
+    const lastOrderDetails = localStorage.getItem("lastOrderDetails");
+
+    if (lastOrderId && lastOrderDetails) {
+      try {
+        const details = JSON.parse(lastOrderDetails);
+
+        // Set all the state from the stored order details
+        if (details.customerInfo) {
+          setCustomerInfo(details.customerInfo);
+        }
+
+        if (details.product) {
+          setQuantity(details.product.quantity || 1);
+        }
+
+        if (details.phoneNumber) {
+          setPhoneNumber(details.phoneNumber);
+        }
+
+        if (details.deliveryTime) {
+          setSelectedDeliveryTime(details.deliveryTime);
+        }
+
+        if (details.deliveryDate) {
+          setSelectedDeliveryDate(details.deliveryDate);
+        }
+
+        if (details.specialInstructions) {
+          setSpecialInstructions(details.specialInstructions);
+        }
+
+        // Fetch the order status immediately
+        getOrderStatus(lastOrderId);
+      } catch (err) {
+        console.error("Error loading order details:", err);
+      }
+    }
+  };
+
+  // Function to refresh order status
+  const refreshOrderStatus = () => {
+    // If we have an order status with an order ID, use that
+    if (orderStatus?.response_data?.[0]?.order_id) {
+      getOrderStatus(orderStatus.response_data[0].order_id);
+    }
+    // Otherwise try to get it from localStorage
+    else {
+      const lastOrderId = localStorage.getItem("lastOrderId");
+      if (lastOrderId) {
+        getOrderStatus(lastOrderId);
+      }
+    }
+  };
 
   const handleIncrement = () => {
     setQuantity((prev) => prev + 1);
@@ -115,10 +192,6 @@ const ProductDetails = ({ product, onClose, onConfirm }) => {
       setError("Failed to submit order. Please try again.");
     }
   };
-
-  useEffect(() => {
-    console.log("Current step:", step);
-  }, [step]);
 
   const renderStep1 = () => (
     <div className="product-details-content">
@@ -389,9 +462,9 @@ const ProductDetails = ({ product, onClose, onConfirm }) => {
           <button
             className="confirm-button"
             onClick={handleConfirm}
-            disabled={loading}
+            disabled={orderLoading}
           >
-            {loading ? "Placing Order..." : "Confirm Order"}
+            {orderLoading ? "Placing Order..." : "Confirm Order"}
           </button>
         </div>
       </div>
@@ -400,6 +473,39 @@ const ProductDetails = ({ product, onClose, onConfirm }) => {
 
   const renderOrderStatus = () => {
     console.log("Rendering order status, current orderStatus:", orderStatus);
+    console.log("First order element:", firstOrderElement);
+
+    // Get the API response from localStorage
+    const apiResponseStr = localStorage.getItem("lastOrderApiResponse");
+    const apiResponse = apiResponseStr ? JSON.parse(apiResponseStr) : null;
+
+    // If we're showing status only and there's no order data
+    if (showStatusOnly && !localStorage.getItem("lastOrderId")) {
+      return (
+        <div className="product-details-content">
+          <h2 className="step-title">Order Status</h2>
+          <div className="order-status-container">
+            <div className="no-order-message">
+              <p>
+                No recent orders found. Place an order to track its status here.
+              </p>
+            </div>
+          </div>
+          <button className="close-button-status" onClick={onClose}>
+            Close
+          </button>
+        </div>
+      );
+    }
+
+    // Get order details from localStorage for display
+    const orderDetails = localStorage.getItem("lastOrderDetails")
+      ? JSON.parse(localStorage.getItem("lastOrderDetails"))
+      : null;
+
+    // Get the first element of response_code from the saved API response
+    const savedFirstElement = apiResponse?.response_code?.[0] || null;
+
     return (
       <div className="product-details-content">
         <h2 className="step-title">Order Status</h2>
@@ -410,71 +516,83 @@ const ProductDetails = ({ product, onClose, onConfirm }) => {
               <div className="order-status-info">
                 <h3>Order Status</h3>
                 <div className="status-details">
-                  {orderStatus.response_data &&
-                  orderStatus.response_data.length > 0 ? (
-                    <>
-                      <div className="status-box">
-                        <p className="status-text">
-                          Status:{" "}
-                          <span className="status-value">
-                            {orderStatus.response_data[0].stage_lang ||
-                              orderStatus.response_data[0].stage}
-                          </span>
-                        </p>
-                        <p className="order-id">
-                          Order ID: #
-                          {orderStatus.response_data[0].order_id ||
-                            "Processing"}
-                        </p>
-                        {orderStatus.response_code[2] && (
-                          <p className="delivery-estimate">
-                            {orderStatus.response_code[2]}
-                          </p>
-                        )}
-                        {orderStatus.response_data[0].can_cancel_order ===
-                          "1" && (
-                          <p className="cancel-info">
-                            * You can still cancel this order if needed
-                          </p>
-                        )}
-                      </div>
-                    </>
-                  ) : (
-                    <p>Processing your order...</p>
-                  )}
+                  <div className="status-box">
+                    <div
+                      style={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                        marginBottom: "10px",
+                      }}
+                    >
+                      <p className="status-text" style={{ margin: 0 }}>
+                        Status:{" "}
+                        <span className="status-value">
+                          {savedFirstElement || "Processing"}
+                        </span>
+                      </p>
+                      <button
+                        onClick={refreshOrderStatus}
+                        style={{
+                          padding: "5px 10px",
+                          backgroundColor: "#f0f0f0",
+                          border: "1px solid #ccc",
+                          borderRadius: "4px",
+                          cursor: "pointer",
+                        }}
+                      >
+                        Refresh
+                      </button>
+                    </div>
+                  </div>
                 </div>
               </div>
 
               <div className="order-summary-status">
                 <h4>Order Summary</h4>
-                <p>
-                  <strong>Product:</strong> {product.name}
-                </p>
-                <p>
-                  <strong>Quantity:</strong> {quantity}
-                </p>
-                <p>
-                  <strong>Total:</strong> $
-                  {(
-                    (product.discountedPrice || product.price) * quantity
-                  ).toFixed(2)}
-                </p>
-                <p>
-                  <strong>Delivery Time:</strong> {selectedDeliveryTime}
-                </p>
-                <p>
-                  <strong>Delivery Date:</strong> {selectedDeliveryDate}
-                </p>
-                <p>
-                  <strong>Customer Name:</strong> {customerInfo.name}
-                </p>
-                <p>
-                  <strong>Phone:</strong> {phoneNumber}
-                </p>
-                <p>
-                  <strong>Car Details:</strong> {customerInfo.carColor}{" "}
-                  {customerInfo.carModel} ({customerInfo.carPlate})
-                </p>
+                {orderDetails ? (
+                  <>
+                    <p>
+                      <strong>Product:</strong> {orderDetails.product.name}
+                    </p>
+                    <p>
+                      <strong>Quantity:</strong> {orderDetails.product.quantity}
+                    </p>
+                    <p>
+                      <strong>Total:</strong> ${orderDetails.totalAmount}
+                    </p>
+                    <p>
+                      <strong>Delivery Time:</strong>{" "}
+                      {orderDetails.deliveryTime}
+                    </p>
+                    <p>
+                      <strong>Delivery Date:</strong>{" "}
+                      {orderDetails.deliveryDate}
+                    </p>
+                    <p>
+                      <strong>Customer Name:</strong>{" "}
+                      {orderDetails.customerInfo.name}
+                    </p>
+                    <p>
+                      <strong>Phone:</strong>{" "}
+                      {orderDetails.customerInfo.phoneNumber}
+                    </p>
+                    <p>
+                      <strong>Car Details:</strong>{" "}
+                      {orderDetails.customerInfo.carColor}{" "}
+                      {orderDetails.customerInfo.carModel} (
+                      {orderDetails.customerInfo.carPlate})
+                    </p>
+                    {orderDetails.specialInstructions && (
+                      <>
+                        <h4>Special Instructions</h4>
+                        <p>{orderDetails.specialInstructions}</p>
+                      </>
+                    )}
+                  </>
+                ) : (
+                  <p>Order details not available</p>
+                )}
               </div>
             </>
           ) : (
@@ -492,26 +610,6 @@ const ProductDetails = ({ product, onClose, onConfirm }) => {
       </div>
     );
   };
-
-  // Add useEffect to handle step 5 persistence and status updates
-  useEffect(() => {
-    if (step === 5) {
-      console.log("Step 5 effect triggered");
-
-      // Set up periodic status updates
-      const statusInterval = setInterval(async () => {
-        if (orderStatus?.response_data?.[0]?.stage !== "Delivered") {
-          const result = await getOrderStatus(
-            orderStatus?.response_data?.[0]?.order_id
-          );
-          console.log("Status update:", result);
-        }
-      }, 30000); // Update every 30 seconds
-
-      // Cleanup interval on unmount or step change
-      return () => clearInterval(statusInterval);
-    }
-  }, [step, orderStatus, getOrderStatus]);
 
   const renderCurrentStep = () => {
     console.log("Rendering step:", step);

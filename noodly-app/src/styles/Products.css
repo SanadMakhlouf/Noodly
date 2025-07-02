@@ -310,6 +310,17 @@
   .info-item {
     justify-content: flex-start;
   }
+
+  .floating-track-button {
+    bottom: 20px;
+    right: 20px;
+    width: 50px;
+    height: 50px;
+  }
+
+  .floating-track-button i {
+    font-size: 20px;
+  }
 }
 
 @media (max-width: 480px) {
@@ -530,4 +541,35 @@
   background-clip: text;
   font-size: 1.2em;
   font-weight: 600;
+}
+
+/* Floating Track Order Button */
+.floating-track-button {
+  position: fixed;
+  bottom: 30px;
+  right: 30px;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: var(--noodly-blue);
+  color: white;
+  border: none;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 1000;
+  transition: all 0.3s ease;
+}
+
+.floating-track-button i {
+  font-size: 24px;
+}
+
+.floating-track-button:hover {
+  transform: scale(1.1);
+  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.4);
+  background: var(--noodly-yellow);
+  color: var(--noodly-blue);
 }

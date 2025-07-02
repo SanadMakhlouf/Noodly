@@ -5,6 +5,7 @@ export const useOrderSubmission = () => {
   const [error, setError] = useState(null);
   const [orderSuccess, setOrderSuccess] = useState(false);
   const [orderStatus, setOrderStatus] = useState(null);
+  const [firstOrderElement, setFirstOrderElement] = useState(null); // <-- new state
 
   const generateOrderId = () =>
     `ORD-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
@@ -125,12 +126,38 @@ export const useOrderSubmission = () => {
 
       if (!response.ok) throw new Error("Failed to submit order");
 
-      // Get the real order ID from response_code[1]
+      // Store the first element from the API response data (adjust path if needed)
+      const firstElement = data?.response_data?.[0] || null;
+      setFirstOrderElement(firstElement);
+
       const realOrderId = data?.response_code?.[1];
       console.log("Real order ID from response:", realOrderId);
 
       if (realOrderId) {
-        // Fetch the order status using the real order ID
+        const orderDetails = {
+          orderId: realOrderId,
+          orderData: orderData,
+          customerInfo: {
+            name: orderData.firstName,
+            phoneNumber: orderData.phoneNumber,
+            carModel: orderData.carModel,
+            carColor: orderData.carColor,
+            carPlate: orderData.carPlate,
+          },
+          product: orderData.products[0],
+          deliveryTime: orderData.deliveryTime,
+          deliveryDate: orderData.deliveryDate,
+          specialInstructions: orderData.specialInstructions,
+          totalAmount: (
+            orderData.products[0].price * orderData.products[0].quantity
+          ).toFixed(2),
+          apiResponse: data, // Save the full API response
+        };
+
+        localStorage.setItem("lastOrderId", realOrderId);
+        localStorage.setItem("lastOrderDetails", JSON.stringify(orderDetails));
+        localStorage.setItem("lastOrderApiResponse", JSON.stringify(data));
+
         const statusData = await getOrderStatus(realOrderId);
         console.log("Initial status data:", statusData);
       }
@@ -138,9 +165,11 @@ export const useOrderSubmission = () => {
       setOrderSuccess(true);
       return {
         success: true,
-        orderId: orderId, // The generated ID used for saving
-        realOrderId: realOrderId, // The ID from response_code[1] used for status
+        orderId: orderId,
+        realOrderId: realOrderId,
         message: "Order submitted successfully",
+        fullResponse: data,
+        firstElement, // also return it here if needed outside
       };
     } catch (err) {
       console.error("Order submission error:", err);
@@ -154,7 +183,7 @@ export const useOrderSubmission = () => {
     }
   };
 
-  const getOrderStatus = async (orderId) => {
+  const getOrderStatus = async (orderId, retryCount = 0) => {
     try {
       console.log("Fetching status for real order ID:", orderId);
       const statusPayload = {
@@ -162,9 +191,12 @@ export const useOrderSubmission = () => {
         language: "english",
         shop_id: "17",
         access_token: "A#25t*4M",
-        order_id: orderId, // Using the real order ID from response_code[1]
+        order_id: orderId,
         domain_id: "1",
       };
+
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10000);
 
       const response = await fetch(
         "https://shopapi.aipsoft.com/app_request/get_data",
@@ -172,8 +204,11 @@ export const useOrderSubmission = () => {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(statusPayload),
+          signal: controller.signal,
         }
       );
+
+      clearTimeout(timeoutId);
 
       const data = await response.json();
       console.log("Order status response:", data);
@@ -183,10 +218,26 @@ export const useOrderSubmission = () => {
       }
 
       setOrderStatus(data);
+      setError(null);
+
+      localStorage.setItem("lastOrderStatus", JSON.stringify(data));
+
       return data;
     } catch (err) {
       console.error("Error fetching order status:", err);
-      setError("Failed to fetch order status");
+
+      if (
+        retryCount < 2 &&
+        (err.name === "AbortError" || err.message === "Failed to fetch")
+      ) {
+        console.log(`Retrying fetch attempt ${retryCount + 1}...`);
+        await new Promise((resolve) => setTimeout(resolve, 2000));
+        return getOrderStatus(orderId, retryCount + 1);
+      }
+
+      setError(
+        "Impossible de récupérer le statut de la commande. Veuillez réessayer plus tard."
+      );
       return null;
     }
   };
@@ -197,6 +248,7 @@ export const useOrderSubmission = () => {
     error,
     orderSuccess,
     orderStatus,
+    firstOrderElement, // <-- expose this so you can access it outside
     getOrderStatus,
   };
 };
