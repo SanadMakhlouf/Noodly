@@ -141,7 +141,7 @@ const OrderStatus = ({ onClose }) => {
                     <strong>Quantité:</strong> {orderDetails.product.quantity}
                   </p>
                   <p>
-                    <strong>Total:</strong> ${orderDetails.totalAmount}
+                    <strong>Total:</strong> {orderDetails.totalAmount} AED
                   </p>
                   <p>
                     <strong>Heure de Livraison:</strong>{" "}

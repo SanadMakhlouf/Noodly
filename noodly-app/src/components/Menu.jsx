@@ -24,7 +24,7 @@ function MenuItem({ name, description, price }) {
           <button className="menu-button" onClick={handleOrderClick}>
             ORDER NOW
           </button>
-          <div className="menu-price">${Number(price).toFixed(2)}</div>
+          <div className="menu-price">{Number(price).toFixed(2)} AED</div>
         </div>
       </div>
     </div>

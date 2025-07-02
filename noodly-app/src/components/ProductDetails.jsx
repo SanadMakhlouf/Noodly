@@ -215,14 +215,14 @@ const ProductDetails = ({
           {product.discountedPrice > 0 ? (
             <>
               <span className="original-price">
-                ${product.price.toFixed(2)}
+                {product.price.toFixed(2)} AED
               </span>
               <span className="discounted-price">
-                ${product.discountedPrice.toFixed(2)}
+                {product.discountedPrice.toFixed(2)} AED
               </span>
             </>
           ) : (
-            <span className="price">${product.price.toFixed(2)}</span>
+            <span className="price">{product.price.toFixed(2)} AED</span>
           )}
         </div>
 
@@ -249,8 +249,8 @@ const ProductDetails = ({
         <div className="total-section">
           <span>Total:</span>
           <span className="total-price">
-            $
-            {((product.discountedPrice || product.price) * quantity).toFixed(2)}
+            {((product.discountedPrice || product.price) * quantity).toFixed(2)}{" "}
+            AED
           </span>
         </div>
 
@@ -420,12 +420,10 @@ const ProductDetails = ({
             <strong>Quantity:</strong> {quantity}
           </p>
           <p>
-            <strong>Price per item:</strong> $
-            {(product.discountedPrice || product.price).toFixed(2)}
+            <strong>Price per item:</strong> {product.price.toFixed(2)} AED
           </p>
           <p>
-            <strong>Total:</strong> $
-            {((product.discountedPrice || product.price) * quantity).toFixed(2)}
+            <strong>Total:</strong> {(product.price * quantity).toFixed(2)} AED
           </p>
 
           <h3>Customer Details</h3>
@@ -570,7 +568,7 @@ const ProductDetails = ({
                       <strong>Quantity:</strong> {orderDetails.product.quantity}
                     </p>
                     <p>
-                      <strong>Total:</strong> ${orderDetails.totalAmount}
+                      <strong>Total:</strong> {orderDetails.totalAmount} AED
                     </p>
                     <p>
                       <strong>Delivery Time:</strong>{" "}

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useMenuData } from "../hooks/useMenuData";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import "../styles/Products.css";
 import logo from "../assets/img40-removebg-preview.png";
 import bgImage from "../assets/noodly-cups.png";
@@ -14,6 +14,7 @@ const Products = () => {
   const location = useLocation();
   const searchParams = new URLSearchParams(location.search);
   const searchQuery = searchParams.get("search") || "";
+  const navigate = useNavigate();
 
   // Filter products based on search term only (category filtering is now handled by the API)
   const filteredProducts = products.filter((product) => {
@@ -78,6 +79,13 @@ const Products = () => {
 
   return (
     <div className="products-container">
+      <button
+        onClick={() => navigate("/")}
+        className="back-home-button"
+        title="Back to Home"
+      >
+        <i className="fas fa-arrow-left"></i>
+      </button>
       <div className="content-overlay">
         <div className="products-header">
           <div className="header-content">
@@ -171,17 +179,19 @@ const Products = () => {
                 )}
                 <div className="product-footer">
                   <div className="price-container">
-                    {product.discountedPrice > 0 ? (
+                    {product.discountedPrice ? (
                       <>
                         <span className="original-price">
-                          ${product.price.toFixed(2)}
+                          {product.price.toFixed(2)} AED
                         </span>
-                        <span className="price">
-                          ${product.discountedPrice.toFixed(2)}
+                        <span className="discounted-price">
+                          {product.discountedPrice.toFixed(2)} AED
                         </span>
                       </>
                     ) : (
-                      <span className="price">${product.price.toFixed(2)}</span>
+                      <span className="price">
+                        {product.price.toFixed(2)} AED
+                      </span>
                     )}
                   </div>
                   <button
