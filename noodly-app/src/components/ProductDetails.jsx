@@ -23,6 +23,8 @@ const ProductDetails = ({ product, onClose, onConfirm }) => {
     loading,
     error: submitError,
     orderSuccess,
+    orderStatus,
+    getOrderStatus,
   } = useOrderSubmission();
 
   useEffect(() => {
@@ -65,7 +67,7 @@ const ProductDetails = ({ product, onClose, onConfirm }) => {
   const handleConfirm = async () => {
     const price = product.discountedPrice || product.price;
     const totalPrice = price * quantity;
-    const taxRate = 0.05; // 5% tax rate
+    const taxRate = 0.05;
     const taxAmount = totalPrice * taxRate;
     const taxLessAmount = totalPrice - taxAmount;
 
@@ -78,13 +80,13 @@ const ProductDetails = ({ product, onClose, onConfirm }) => {
           quantity,
           price,
           name: product.name,
-          addons: [], // Add addon support if needed
+          addons: [],
         },
       ],
       phoneNumber: phoneNumber,
       firstName: customerInfo.name,
       lastName: "",
-      addressId: "1", // You might want to make this dynamic
+      addressId: "1",
       deliveryTime: selectedDeliveryTime,
       deliveryDate: selectedDeliveryDate,
       paymentMethod,
@@ -92,14 +94,20 @@ const ProductDetails = ({ product, onClose, onConfirm }) => {
 
     try {
       const result = await submitOrder(orderData);
+      console.log("Order submission result:", result);
 
       if (result.success) {
-        onConfirm({
-          ...orderData,
-          orderId: result.orderId,
-          customerInfo,
-          specialInstructions,
-        });
+        console.log("Moving to step 5 with real order ID:", result.realOrderId);
+        setStep(5);
+
+        setTimeout(() => {
+          onConfirm({
+            ...orderData,
+            orderId: result.realOrderId,
+            customerInfo,
+            specialInstructions,
+          });
+        }, 0);
       } else {
         setError(result.error);
       }
@@ -107,6 +115,10 @@ const ProductDetails = ({ product, onClose, onConfirm }) => {
       setError("Failed to submit order. Please try again.");
     }
   };
+
+  useEffect(() => {
+    console.log("Current step:", step);
+  }, [step]);
 
   const renderStep1 = () => (
     <div className="product-details-content">
@@ -279,116 +291,230 @@ const ProductDetails = ({ product, onClose, onConfirm }) => {
     </div>
   );
 
-  const renderStep4 = () => (
-    <div className="product-details-content">
-      <h2 className="step-title">Order Summary</h2>
+  const renderStep4 = () => {
+    // Automatically set delivery date to tomorrow
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    const formatDate = (date) => {
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, "0");
+      const day = String(date.getDate()).padStart(2, "0");
+      return `${year}-${month}-${day}`;
+    };
 
-      <div className="delivery-details">
-        <div className="form-group">
-          <label htmlFor="deliveryDate">Delivery Date:</label>
-          <input
-            type="date"
-            id="deliveryDate"
-            value={selectedDeliveryDate}
-            onChange={(e) => setSelectedDeliveryDate(e.target.value)}
-            min={new Date().toISOString().split("T")[0]}
-            required
-          />
+    // Set default delivery time
+    const defaultTime = "12:00-13:00";
+
+    // Set the values automatically if they're not set
+    if (!selectedDeliveryDate) {
+      setSelectedDeliveryDate(formatDate(tomorrow));
+    }
+    if (!selectedDeliveryTime) {
+      setSelectedDeliveryTime(defaultTime);
+    }
+
+    return (
+      <div className="product-details-content">
+        <h2 className="step-title">Order Summary</h2>
+
+        <div className="delivery-details">
+          <div className="delivery-info">
+            <h3>Delivery Information</h3>
+            <p>
+              Your order will be delivered tomorrow between 12:00 PM - 1:00 PM
+            </p>
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="paymentMethod">Payment Method:</label>
+            <select
+              id="paymentMethod"
+              value={paymentMethod}
+              onChange={(e) => setPaymentMethod(e.target.value)}
+              required
+            >
+              <option value="COD">Cash on Delivery</option>
+            </select>
+          </div>
         </div>
 
-        <div className="form-group">
-          <label htmlFor="deliveryTime">Delivery Time:</label>
-          <select
-            id="deliveryTime"
-            value={selectedDeliveryTime}
-            onChange={(e) => setSelectedDeliveryTime(e.target.value)}
-            required
+        <div className="order-summary">
+          <h3>Order Details</h3>
+          <p>
+            <strong>Product:</strong> {product.name}
+          </p>
+          <p>
+            <strong>Quantity:</strong> {quantity}
+          </p>
+          <p>
+            <strong>Price per item:</strong> $
+            {(product.discountedPrice || product.price).toFixed(2)}
+          </p>
+          <p>
+            <strong>Total:</strong> $
+            {((product.discountedPrice || product.price) * quantity).toFixed(2)}
+          </p>
+
+          <h3>Customer Details</h3>
+          <p>
+            <strong>Name:</strong> {customerInfo.name}
+          </p>
+          <p>
+            <strong>Phone:</strong> {phoneNumber}
+          </p>
+          <p>
+            <strong>Car Model:</strong> {customerInfo.carModel}
+          </p>
+          <p>
+            <strong>Car Color:</strong> {customerInfo.carColor}
+          </p>
+          <p>
+            <strong>Car Plate:</strong> {customerInfo.carPlate}
+          </p>
+
+          {specialInstructions && (
+            <>
+              <h3>Special Instructions</h3>
+              <p>{specialInstructions}</p>
+            </>
+          )}
+
+          {submitError && <div className="error-message">{submitError}</div>}
+        </div>
+
+        <div className="button-group">
+          <button className="back-button" onClick={handlePrevStep}>
+            Back
+          </button>
+          <button
+            className="confirm-button"
+            onClick={handleConfirm}
+            disabled={loading}
           >
-            <option value="">Select a time slot</option>
-            <option value="09:00-10:00">9:00 AM - 10:00 AM</option>
-            <option value="10:00-11:00">10:00 AM - 11:00 AM</option>
-            <option value="11:00-12:00">11:00 AM - 12:00 PM</option>
-            <option value="12:00-13:00">12:00 PM - 1:00 PM</option>
-            <option value="13:00-14:00">1:00 PM - 2:00 PM</option>
-            <option value="14:00-15:00">2:00 PM - 3:00 PM</option>
-            <option value="15:00-16:00">3:00 PM - 4:00 PM</option>
-            <option value="16:00-17:00">4:00 PM - 5:00 PM</option>
-          </select>
-        </div>
-
-        <div className="form-group">
-          <label htmlFor="paymentMethod">Payment Method:</label>
-          <select
-            id="paymentMethod"
-            value={paymentMethod}
-            onChange={(e) => setPaymentMethod(e.target.value)}
-            required
-          >
-            <option value="COD">Cash on Delivery</option>
-          </select>
+            {loading ? "Placing Order..." : "Confirm Order"}
+          </button>
         </div>
       </div>
+    );
+  };
 
-      <div className="order-summary">
-        <h3>Order Details</h3>
-        <p>
-          <strong>Product:</strong> {product.name}
-        </p>
-        <p>
-          <strong>Quantity:</strong> {quantity}
-        </p>
-        <p>
-          <strong>Price per item:</strong> $
-          {(product.discountedPrice || product.price).toFixed(2)}
-        </p>
-        <p>
-          <strong>Total:</strong> $
-          {((product.discountedPrice || product.price) * quantity).toFixed(2)}
-        </p>
+  const renderOrderStatus = () => {
+    console.log("Rendering order status, current orderStatus:", orderStatus);
+    return (
+      <div className="product-details-content">
+        <h2 className="step-title">Order Status</h2>
 
-        <h3>Customer Details</h3>
-        <p>
-          <strong>Name:</strong> {customerInfo.name}
-        </p>
-        <p>
-          <strong>Phone:</strong> {phoneNumber}
-        </p>
-        <p>
-          <strong>Car Model:</strong> {customerInfo.carModel}
-        </p>
-        <p>
-          <strong>Car Color:</strong> {customerInfo.carColor}
-        </p>
-        <p>
-          <strong>Car Plate:</strong> {customerInfo.carPlate}
-        </p>
+        <div className="order-status-container">
+          {orderStatus ? (
+            <>
+              <div className="order-status-info">
+                <h3>Order Status</h3>
+                <div className="status-details">
+                  {orderStatus.response_data &&
+                  orderStatus.response_data.length > 0 ? (
+                    <>
+                      <div className="status-box">
+                        <p className="status-text">
+                          Status:{" "}
+                          <span className="status-value">
+                            {orderStatus.response_data[0].stage_lang ||
+                              orderStatus.response_data[0].stage}
+                          </span>
+                        </p>
+                        <p className="order-id">
+                          Order ID: #
+                          {orderStatus.response_data[0].order_id ||
+                            "Processing"}
+                        </p>
+                        {orderStatus.response_code[2] && (
+                          <p className="delivery-estimate">
+                            {orderStatus.response_code[2]}
+                          </p>
+                        )}
+                        {orderStatus.response_data[0].can_cancel_order ===
+                          "1" && (
+                          <p className="cancel-info">
+                            * You can still cancel this order if needed
+                          </p>
+                        )}
+                      </div>
+                    </>
+                  ) : (
+                    <p>Processing your order...</p>
+                  )}
+                </div>
+              </div>
 
-        {specialInstructions && (
-          <>
-            <h3>Special Instructions</h3>
-            <p>{specialInstructions}</p>
-          </>
-        )}
+              <div className="order-summary-status">
+                <h4>Order Summary</h4>
+                <p>
+                  <strong>Product:</strong> {product.name}
+                </p>
+                <p>
+                  <strong>Quantity:</strong> {quantity}
+                </p>
+                <p>
+                  <strong>Total:</strong> $
+                  {(
+                    (product.discountedPrice || product.price) * quantity
+                  ).toFixed(2)}
+                </p>
+                <p>
+                  <strong>Delivery Time:</strong> {selectedDeliveryTime}
+                </p>
+                <p>
+                  <strong>Delivery Date:</strong> {selectedDeliveryDate}
+                </p>
+                <p>
+                  <strong>Customer Name:</strong> {customerInfo.name}
+                </p>
+                <p>
+                  <strong>Phone:</strong> {phoneNumber}
+                </p>
+                <p>
+                  <strong>Car Details:</strong> {customerInfo.carColor}{" "}
+                  {customerInfo.carModel} ({customerInfo.carPlate})
+                </p>
+              </div>
+            </>
+          ) : (
+            <div className="loading-status">
+              <p>Loading order status...</p>
+            </div>
+          )}
 
-        {submitError && <div className="error-message">{submitError}</div>}
-      </div>
+          {error && <div className="error-message">{error}</div>}
+        </div>
 
-      <div className="button-group">
-        <button className="back-button" onClick={handlePrevStep}>
-          Back
+        <button className="close-button-status" onClick={onClose}>
+          Close
         </button>
-        <button
-          className="confirm-button"
-          onClick={handleConfirm}
-          disabled={loading || !selectedDeliveryDate || !selectedDeliveryTime}
-        >
-          {loading ? "Placing Order..." : "Confirm Order"}
-        </button>
       </div>
-    </div>
-  );
+    );
+  };
+
+  // Add useEffect to handle step 5 persistence and status updates
+  useEffect(() => {
+    if (step === 5) {
+      console.log("Step 5 effect triggered");
+
+      // Set up periodic status updates
+      const statusInterval = setInterval(async () => {
+        if (orderStatus?.response_data?.[0]?.stage !== "Delivered") {
+          const result = await getOrderStatus(
+            orderStatus?.response_data?.[0]?.order_id
+          );
+          console.log("Status update:", result);
+        }
+      }, 30000); // Update every 30 seconds
+
+      // Cleanup interval on unmount or step change
+      return () => clearInterval(statusInterval);
+    }
+  }, [step, orderStatus, getOrderStatus]);
 
   const renderCurrentStep = () => {
+    console.log("Rendering step:", step);
     switch (step) {
       case 1:
         return renderStep1();
@@ -398,6 +524,9 @@ const ProductDetails = ({ product, onClose, onConfirm }) => {
         return renderStep3();
       case 4:
         return renderStep4();
+      case 5:
+        console.log("Should render order status now");
+        return renderOrderStatus();
       default:
         return null;
     }
@@ -406,9 +535,11 @@ const ProductDetails = ({ product, onClose, onConfirm }) => {
   return (
     <div className="product-details-overlay">
       <div className="product-details-container">
-        <button className="close-button" onClick={onClose}>
-          ×
-        </button>
+        {step !== 5 && (
+          <button className="close-button" onClick={onClose}>
+            ×
+          </button>
+        )}
         {renderCurrentStep()}
       </div>
     </div>

@@ -457,37 +457,365 @@
 @media (max-width: 480px) {
   .product-details-overlay {
     padding: 0;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: white;
+    z-index: 9999;
   }
 
   .product-details-container {
-    height: 100vh;
-    max-height: 100vh;
+    width: 100%;
+    height: 100%;
+    max-height: 100%;
     border-radius: 0;
+    position: relative;
+    overflow-y: auto;
+    background: white;
   }
 
   .product-details-content {
     padding: 20px;
+    padding-bottom: 100px;
   }
 
-  .button-group {
-    position: sticky;
-    bottom: 0;
+  /* Step 4 specific styles */
+  .delivery-details {
     background: white;
     padding: 15px;
-    margin: 0 -20px -20px;
-    box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+    margin: 0 0 20px 0;
+    border: none;
+    box-shadow: none;
   }
 
-  .order-summary,
-  .delivery-details,
-  .customer-info-form {
-    margin-bottom: 15px;
-    padding: 15px;
+  .form-group {
+    position: relative;
+    margin-bottom: 20px;
   }
 
-  .quantity-buttons button {
-    width: 28px;
-    height: 28px;
+  .form-group input[type="date"] {
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    width: 100%;
+    height: 50px;
+    padding: 10px 15px;
+    font-size: 16px !important;
+    border: 2px solid #e1e8ed;
+    border-radius: 8px;
+    background-color: white;
+    color: #333;
+    position: relative;
+  }
+
+  /* Remove default calendar icon */
+  .form-group input[type="date"]::-webkit-calendar-picker-indicator {
+    opacity: 1;
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    top: 0;
+    left: 0;
+    color: transparent;
+    background: transparent;
+    cursor: pointer;
+  }
+
+  /* Custom calendar icon using pseudo-element */
+  .form-group input[type="date"]::after {
+    content: "📅";
+    position: absolute;
+    top: 50%;
+    right: 10px;
+    transform: translateY(-50%);
+    pointer-events: none;
+    font-size: 20px;
+  }
+
+  /* Time select improvements */
+  .form-group select {
+    width: 100%;
+    height: 50px;
+    padding: 10px 15px;
+    font-size: 16px !important;
+    border: 2px solid #e1e8ed;
+    border-radius: 8px;
+    background-color: white;
+    color: #333;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath fill='%23666' d='M7 10l5 5 5-5H7z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    background-size: 24px;
+    padding-right: 40px;
+  }
+
+  /* Form group improvements */
+  .form-group {
+    margin-bottom: 20px;
+    position: relative;
+  }
+
+  .form-group label {
+    display: block;
+    margin-bottom: 8px;
     font-size: 16px;
+    font-weight: 500;
+    color: #333;
   }
+
+  /* Delivery details container */
+  .delivery-details {
+    background: white;
+    padding: 20px;
+    border-radius: 12px;
+    margin-bottom: 20px;
+  }
+
+  /* Make inputs more tappable */
+  .form-group input[type="date"],
+  .form-group select {
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* Style for disabled state */
+  .form-group input[type="date"]:disabled,
+  .form-group select:disabled {
+    background-color: #f5f5f5;
+    cursor: not-allowed;
+  }
+
+  /* Style for focus state */
+  .form-group input[type="date"]:focus,
+  .form-group select:focus {
+    border-color: var(--noodly-blue);
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(var(--noodly-blue-rgb), 0.1);
+  }
+
+  /* Order summary styles */
+  .order-summary {
+    background: white;
+    padding: 15px;
+    margin: 0 0 20px 0;
+    border: none;
+    box-shadow: none;
+  }
+
+  .order-summary h3 {
+    font-size: 18px;
+    margin-bottom: 15px;
+    color: #333;
+  }
+
+  /* Button group styles */
+  .button-group {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 15px;
+    background: white;
+    box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+    display: flex;
+    gap: 10px;
+    z-index: 1000;
+  }
+
+  .button-group button {
+    flex: 1;
+    min-height: 48px;
+    font-size: 16px;
+    border-radius: 8px;
+    padding: 12px;
+  }
+
+  .back-button,
+  .next-button,
+  .confirm-button {
+    width: 100%;
+    min-height: 48px;
+    font-size: 16px;
+    padding: 12px;
+    border-radius: 8px;
+  }
+
+  /* Status page specific styles */
+  .order-status-container {
+    padding: 15px;
+    margin: 0;
+    background: white;
+  }
+
+  .status-box {
+    padding: 15px;
+    margin-bottom: 20px;
+    border: 2px solid #e1e8ed;
+  }
+
+  .close-button-status {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    margin: 0;
+    border-radius: 0;
+    height: 60px;
+    font-size: 18px;
+  }
+}
+
+.order-status-container {
+  padding: 25px;
+  background: white;
+  border-radius: 15px;
+  margin-bottom: 20px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.status-box {
+  background: #f8f9fa;
+  padding: 25px;
+  border-radius: 12px;
+  border: 1px solid #e9ecef;
+  margin-bottom: 25px;
+  position: relative;
+  overflow: hidden;
+}
+
+.status-box::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background: var(--noodly-blue);
+}
+
+.status-text {
+  font-size: 1.3em;
+  margin-bottom: 20px;
+  color: #1a1a1a;
+  font-weight: 500;
+}
+
+.status-value {
+  font-weight: 700;
+  color: var(--noodly-blue);
+  display: block;
+  margin-top: 5px;
+  font-size: 1.1em;
+}
+
+.order-id {
+  font-size: 1em;
+  color: #4a4a4a;
+  margin-bottom: 12px;
+  background: #fff;
+  padding: 8px 12px;
+  border-radius: 6px;
+  display: inline-block;
+}
+
+.processed-time {
+  font-size: 0.95em;
+  color: #666;
+  margin-bottom: 15px;
+  border-bottom: 1px dashed #e1e1e1;
+  padding-bottom: 15px;
+}
+
+.delivery-estimate {
+  background: #e8f5e9;
+  color: #2e7d32;
+  padding: 12px 16px;
+  border-radius: 8px;
+  margin-top: 15px;
+  font-size: 1em;
+  font-weight: 500;
+  border: 1px solid #c8e6c9;
+}
+
+.cancel-info {
+  color: #d32f2f;
+  font-size: 0.95em;
+  margin-top: 15px;
+  font-style: italic;
+  background: #ffebee;
+  padding: 10px 15px;
+  border-radius: 6px;
+  border: 1px solid #ffcdd2;
+}
+
+.order-summary-status {
+  background: #fff;
+  padding: 20px;
+  border-radius: 12px;
+  border: 1px solid #e9ecef;
+  margin-top: 20px;
+}
+
+.order-summary-status h4 {
+  color: #1a1a1a;
+  font-size: 1.2em;
+  margin-bottom: 15px;
+  padding-bottom: 10px;
+  border-bottom: 2px solid var(--noodly-blue);
+}
+
+.order-summary-status p {
+  display: flex;
+  justify-content: space-between;
+  padding: 12px;
+  margin: 8px 0;
+  background: #f8f9fa;
+  border-radius: 8px;
+  color: #4a4a4a;
+}
+
+.order-summary-status p:nth-child(even) {
+  background: #fff;
+}
+
+.order-summary-status strong {
+  color: #1a1a1a;
+  font-weight: 600;
+}
+
+.close-button-status {
+  width: 100%;
+  padding: 15px;
+  background: var(--noodly-blue);
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-size: 1.1em;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin-top: 25px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.close-button-status:hover {
+  background: var(--noodly-blue);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 15px rgba(var(--noodly-blue-rgb), 0.25);
+}
+
+.loading-status {
+  text-align: center;
+  padding: 50px;
+  color: #4a4a4a;
+  font-size: 1.1em;
+  background: #f8f9fa;
+  border-radius: 12px;
+  margin: 20px 0;
 }

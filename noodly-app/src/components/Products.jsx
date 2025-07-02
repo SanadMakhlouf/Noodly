@@ -52,7 +52,7 @@ const Products = () => {
 
   const handleConfirmOrder = (orderDetails) => {
     console.log("Order confirmed:", orderDetails);
-    setSelectedProduct(null);
+    // Don't close the modal here - let the user close it manually from the status page
   };
 
   const handleCategoryClick = (categoryId) => {
