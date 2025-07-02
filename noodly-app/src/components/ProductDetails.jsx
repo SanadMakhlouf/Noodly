@@ -544,6 +544,17 @@ const ProductDetails = ({
                         Refresh
                       </button>
                     </div>
+
+                    <p
+                      style={{
+                        textAlign: "center",
+                        fontWeight: "bold",
+                        margin: "10px 0",
+                        color: "#4CAF50",
+                      }}
+                    >
+                      Submitted Order
+                    </p>
                   </div>
                 </div>
               </div>
@@ -594,6 +605,17 @@ const ProductDetails = ({
                   <p>Order details not available</p>
                 )}
               </div>
+
+              <p
+                style={{
+                  textAlign: "center",
+                  fontWeight: "bold",
+                  margin: "10px 0",
+                  color: "#4CAF50",
+                }}
+              >
+                Submitted Order
+              </p>
             </>
           ) : (
             <div className="loading-status">
