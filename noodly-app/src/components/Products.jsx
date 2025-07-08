@@ -5,16 +5,36 @@ import "../styles/Products.css";
 import logo from "../assets/img40-removebg-preview.png";
 import bgImage from "../assets/noodly-cups.png";
 import ProductDetails from "./ProductDetails";
+import Cart from "./Cart";
 
 const Products = () => {
   const { products, categories, error, selectedCategory, setSelectedCategory } =
     useMenuData();
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [showOrderStatus, setShowOrderStatus] = useState(false);
+  const [cartItems, setCartItems] = useState([]);
+  const [showCart, setShowCart] = useState(false);
   const location = useLocation();
   const searchParams = new URLSearchParams(location.search);
   const searchQuery = searchParams.get("search") || "";
   const navigate = useNavigate();
+
+  // Load cart from localStorage on initial render
+  useEffect(() => {
+    const savedCart = localStorage.getItem("noodlyCart");
+    if (savedCart) {
+      try {
+        setCartItems(JSON.parse(savedCart));
+      } catch (err) {
+        console.error("Error loading cart from localStorage:", err);
+      }
+    }
+  }, []);
+
+  // Save cart to localStorage whenever it changes
+  useEffect(() => {
+    localStorage.setItem("noodlyCart", JSON.stringify(cartItems));
+  }, [cartItems]);
 
   // Filter products based on search term only (category filtering is now handled by the API)
   const filteredProducts = products.filter((product) => {
@@ -54,9 +74,79 @@ const Products = () => {
     setShowOrderStatus(false);
   };
 
-  const handleConfirmOrder = (orderDetails) => {
-    console.log("Order confirmed:", orderDetails);
-    // Don't close the modal here - let the user close it manually from the status page
+  const handleAddToCart = (product, quantity, specialInstructions) => {
+    const existingItemIndex = cartItems.findIndex(
+      (item) => item.id === product.id
+    );
+
+    if (existingItemIndex !== -1) {
+      // Update existing item
+      const updatedItems = [...cartItems];
+      updatedItems[existingItemIndex] = {
+        ...updatedItems[existingItemIndex],
+        quantity: updatedItems[existingItemIndex].quantity + quantity,
+        specialInstructions:
+          specialInstructions ||
+          updatedItems[existingItemIndex].specialInstructions,
+      };
+      setCartItems(updatedItems);
+    } else {
+      // Add new item
+      setCartItems([
+        ...cartItems,
+        {
+          ...product,
+          quantity,
+          specialInstructions,
+        },
+      ]);
+    }
+
+    setSelectedProduct(null);
+    setShowCart(true);
+  };
+
+  const handleUpdateCartQuantity = (productId, newQuantity) => {
+    console.log(`Updating quantity for product ${productId} to ${newQuantity}`);
+
+    if (newQuantity <= 0) {
+      handleRemoveFromCart(productId);
+      return;
+    }
+
+    const updatedItems = cartItems.map((item) =>
+      item.id === productId ? { ...item, quantity: newQuantity } : item
+    );
+
+    setCartItems(updatedItems);
+  };
+
+  const handleRemoveFromCart = (productId) => {
+    console.log(`Removing product ${productId} from cart`);
+    const updatedItems = cartItems.filter((item) => item.id !== productId);
+    setCartItems(updatedItems);
+  };
+
+  const clearCart = () => {
+    setCartItems([]);
+    localStorage.removeItem("noodlyCart");
+  };
+
+  const handleCheckout = () => {
+    if (cartItems.length === 0) {
+      alert("Your cart is empty");
+      return;
+    }
+
+    // Create a combined product for checkout
+    const firstItem = cartItems[0];
+    setSelectedProduct({
+      ...firstItem,
+      isCartCheckout: true,
+      cartItems: [...cartItems], // Create a new array to ensure proper state update
+      onOrderSuccess: clearCart, // Pass the clearCart function to be called after successful order
+    });
+    setShowCart(false);
   };
 
   const handleCategoryClick = (categoryId) => {
@@ -68,14 +158,49 @@ const Products = () => {
   };
 
   const toggleOrderStatus = () => {
-    // Create a dummy product for the status view
-    setSelectedProduct({
-      name: "Last Order",
-      price: 0,
-      id: "status-view",
-    });
-    setShowOrderStatus(true);
+    // Load the last order details from localStorage
+    const lastOrderDetails = localStorage.getItem("lastOrderDetails");
+
+    if (lastOrderDetails) {
+      try {
+        const parsedDetails = JSON.parse(lastOrderDetails);
+
+        // Create a status view with the saved order details
+        setSelectedProduct({
+          name: "Last Order",
+          price: 0,
+          id: "status-view",
+          // Add the saved products for status display
+          isCartCheckout: parsedDetails.isCartOrder,
+          cartItems: parsedDetails.products || [],
+        });
+
+        setShowOrderStatus(true);
+      } catch (err) {
+        console.error("Error parsing last order details:", err);
+        // Fallback to simple status view
+        setSelectedProduct({
+          name: "Last Order",
+          price: 0,
+          id: "status-view",
+        });
+        setShowOrderStatus(true);
+      }
+    } else {
+      // No previous order, show empty status
+      setSelectedProduct({
+        name: "Last Order",
+        price: 0,
+        id: "status-view",
+      });
+      setShowOrderStatus(true);
+    }
   };
+
+  const cartItemCount = cartItems.reduce(
+    (total, item) => total + item.quantity,
+    0
+  );
 
   return (
     <div className="products-container">
@@ -86,6 +211,19 @@ const Products = () => {
       >
         <i className="fas fa-arrow-left"></i>
       </button>
+
+      {/* Cart Button */}
+      <button
+        className="floating-cart-button"
+        onClick={() => setShowCart(true)}
+        title="View Cart"
+      >
+        <i className="fas fa-shopping-cart"></i>
+        {cartItemCount > 0 && (
+          <span className="cart-count">{cartItemCount}</span>
+        )}
+      </button>
+
       <div className="content-overlay">
         <div className="products-header">
           <div className="header-content">
@@ -198,7 +336,7 @@ const Products = () => {
                     className="customize-button"
                     onClick={() => handleOrderClick(product)}
                   >
-                    order now
+                    Add to Cart
                   </button>
                 </div>
               </div>
@@ -215,8 +353,21 @@ const Products = () => {
           <ProductDetails
             product={selectedProduct}
             onClose={handleCloseDetails}
-            onConfirm={handleConfirmOrder}
+            onAddToCart={handleAddToCart}
             showStatusOnly={showOrderStatus}
+            isCartCheckout={selectedProduct.isCartCheckout}
+            cartItems={selectedProduct.cartItems || cartItems}
+            onOrderSuccess={selectedProduct.onOrderSuccess}
+          />
+        )}
+
+        {showCart && (
+          <Cart
+            items={cartItems}
+            onUpdateQuantity={handleUpdateCartQuantity}
+            onRemoveItem={handleRemoveFromCart}
+            onClose={() => setShowCart(false)}
+            onCheckout={handleCheckout}
           />
         )}
       </div>

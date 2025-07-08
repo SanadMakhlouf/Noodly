@@ -5,8 +5,11 @@ import "../styles/ProductDetails.css";
 const ProductDetails = ({
   product,
   onClose,
-  onConfirm,
+  onAddToCart,
   showStatusOnly = false,
+  isCartCheckout = false,
+  cartItems = [],
+  onOrderSuccess,
 }) => {
   const [step, setStep] = useState(showStatusOnly ? 5 : 1);
   const [quantity, setQuantity] = useState(1);
@@ -37,12 +40,10 @@ const ProductDetails = ({
 
   // Load order details and fetch status when component mounts
   useEffect(() => {
-    // If showing status only, load from localStorage
     if (showStatusOnly) {
       loadOrderDetailsAndFetchStatus();
     }
 
-    // If we're at step 5 (after order placement), set up auto-refresh
     if (step === 5) {
       const statusInterval = setInterval(() => {
         refreshOrderStatus();
@@ -61,7 +62,6 @@ const ProductDetails = ({
       try {
         const details = JSON.parse(lastOrderDetails);
 
-        // Set all the state from the stored order details
         if (details.customerInfo) {
           setCustomerInfo(details.customerInfo);
         }
@@ -86,7 +86,6 @@ const ProductDetails = ({
           setSpecialInstructions(details.specialInstructions);
         }
 
-        // Fetch the order status immediately
         getOrderStatus(lastOrderId);
       } catch (err) {
         console.error("Error loading order details:", err);
@@ -96,12 +95,9 @@ const ProductDetails = ({
 
   // Function to refresh order status
   const refreshOrderStatus = () => {
-    // If we have an order status with an order ID, use that
     if (orderStatus?.response_data?.[0]?.order_id) {
       getOrderStatus(orderStatus.response_data[0].order_id);
-    }
-    // Otherwise try to get it from localStorage
-    else {
+    } else {
       const lastOrderId = localStorage.getItem("lastOrderId");
       if (lastOrderId) {
         getOrderStatus(lastOrderId);
@@ -110,16 +106,31 @@ const ProductDetails = ({
   };
 
   const handleIncrement = () => {
-    setQuantity((prev) => prev + 1);
+    setQuantity((prev) => {
+      const newQuantity = prev + 1;
+      console.log(`Incrementing quantity to ${newQuantity}`);
+      return newQuantity;
+    });
   };
 
   const handleDecrement = () => {
     if (quantity > 1) {
-      setQuantity((prev) => prev - 1);
+      setQuantity((prev) => {
+        const newQuantity = prev - 1;
+        console.log(`Decrementing quantity to ${newQuantity}`);
+        return newQuantity;
+      });
     }
   };
 
   const handleNextStep = () => {
+    if (!isCartCheckout && step === 1 && quantity > 0) {
+      // If not cart checkout, add to cart instead of proceeding
+      console.log(`Adding to cart: ${product.name}, quantity: ${quantity}`);
+      onAddToCart(product, quantity, specialInstructions);
+      return;
+    }
+
     if (step === 1 && quantity > 0) {
       setStep(2);
     } else if (step === 2 && phoneNumber.length >= 8) {
@@ -142,32 +153,72 @@ const ProductDetails = ({
   };
 
   const handleConfirm = async () => {
-    const price = product.discountedPrice || product.price;
-    const totalPrice = price * quantity;
-    const taxRate = 0.05;
-    const taxAmount = totalPrice * taxRate;
-    const taxLessAmount = totalPrice - taxAmount;
+    let orderData;
 
-    const orderData = {
-      taxLessAmount,
-      taxAmount,
-      products: [
-        {
-          id: product.id,
-          quantity,
-          price,
-          name: product.name,
-          addons: [],
+    if (isCartCheckout) {
+      // Calculate totals for all cart items
+      const { taxLessAmount, taxAmount, totalPrice } = cartItems.reduce(
+        (acc, item) => {
+          const itemPrice = item.discountedPrice || item.price;
+          const itemTotal = itemPrice * item.quantity;
+          const itemTax = itemTotal * 0.05;
+          return {
+            taxLessAmount: acc.taxLessAmount + (itemTotal - itemTax),
+            taxAmount: acc.taxAmount + itemTax,
+            totalPrice: acc.totalPrice + itemTotal,
+          };
         },
-      ],
-      phoneNumber: phoneNumber,
-      firstName: customerInfo.name,
-      lastName: "",
-      addressId: "1",
-      deliveryTime: selectedDeliveryTime,
-      deliveryDate: selectedDeliveryDate,
-      paymentMethod,
-    };
+        { taxLessAmount: 0, taxAmount: 0, totalPrice: 0 }
+      );
+
+      orderData = {
+        taxLessAmount,
+        taxAmount,
+        products: cartItems.map((item) => ({
+          id: item.id,
+          quantity: item.quantity,
+          price: item.discountedPrice || item.price,
+          name: item.name,
+          addons: [],
+          specialInstructions: item.specialInstructions,
+        })),
+        phoneNumber,
+        firstName: customerInfo.name,
+        lastName: "",
+        addressId: "1",
+        deliveryTime: selectedDeliveryTime,
+        deliveryDate: selectedDeliveryDate,
+        paymentMethod,
+      };
+    } else {
+      const price = product.discountedPrice || product.price;
+      const totalPrice = price * quantity;
+      const taxRate = 0.05;
+      const taxAmount = totalPrice * taxRate;
+      const taxLessAmount = totalPrice - taxAmount;
+
+      orderData = {
+        taxLessAmount,
+        taxAmount,
+        products: [
+          {
+            id: product.id,
+            quantity,
+            price,
+            name: product.name,
+            addons: [],
+            specialInstructions,
+          },
+        ],
+        phoneNumber,
+        firstName: customerInfo.name,
+        lastName: "",
+        addressId: "1",
+        deliveryTime: selectedDeliveryTime,
+        deliveryDate: selectedDeliveryDate,
+        paymentMethod,
+      };
+    }
 
     try {
       const result = await submitOrder(orderData);
@@ -175,16 +226,71 @@ const ProductDetails = ({
 
       if (result.success) {
         console.log("Moving to step 5 with real order ID:", result.realOrderId);
+
+        // Clear the cart if this was a cart checkout
+        if (isCartCheckout && onOrderSuccess) {
+          console.log("Clearing cart after successful order");
+          onOrderSuccess();
+        }
+
         setStep(5);
 
-        setTimeout(() => {
-          onConfirm({
-            ...orderData,
-            orderId: result.realOrderId,
-            customerInfo,
-            specialInstructions,
-          });
-        }, 0);
+        // Store order details in localStorage
+        localStorage.setItem("lastOrderId", result.realOrderId);
+
+        // Store the full order details including all cart items
+        const orderDetailsToSave = {
+          customerInfo,
+          phoneNumber,
+          deliveryTime: selectedDeliveryTime,
+          deliveryDate: selectedDeliveryDate,
+          specialInstructions,
+          totalAmount: isCartCheckout
+            ? cartItems
+                .reduce(
+                  (total, item) =>
+                    total +
+                    (item.discountedPrice || item.price) * item.quantity,
+                  0
+                )
+                .toFixed(2)
+            : ((product.discountedPrice || product.price) * quantity).toFixed(
+                2
+              ),
+          isCartOrder: isCartCheckout,
+          products: isCartCheckout
+            ? cartItems.map((item) => ({
+                id: item.id,
+                name: item.name,
+                quantity: item.quantity,
+                price: (item.discountedPrice || item.price).toFixed(2),
+                specialInstructions: item.specialInstructions || "",
+                image: item.image,
+              }))
+            : [
+                {
+                  id: product.id,
+                  name: product.name,
+                  quantity: quantity,
+                  price: (product.discountedPrice || product.price).toFixed(2),
+                  specialInstructions: specialInstructions || "",
+                  image: product.image,
+                },
+              ],
+        };
+
+        localStorage.setItem(
+          "lastOrderDetails",
+          JSON.stringify(orderDetailsToSave)
+        );
+
+        // Also store API response for status display
+        if (result.apiResponse) {
+          localStorage.setItem(
+            "lastOrderApiResponse",
+            JSON.stringify(result.apiResponse)
+          );
+        }
       } else {
         setError(result.error);
       }
@@ -193,73 +299,184 @@ const ProductDetails = ({
     }
   };
 
-  const renderStep1 = () => (
-    <div className="product-details-content">
-      <div className="product-details-image-container">
-        <img
-          src={product.image}
-          alt={product.name}
-          className="product-details-image"
-          onError={(e) => {
-            e.target.onerror = null;
-            e.target.src = "/images/noodle-placeholder.jpg";
-          }}
-        />
-      </div>
+  const renderStep1 = () => {
+    if (isCartCheckout) {
+      return (
+        <div className="product-details-content">
+          <h2 className="step-title">Checkout</h2>
+          <div className="order-summary">
+            <h3>Cart Items</h3>
+            {cartItems.map((item) => (
+              <div
+                key={item.id}
+                className="cart-item-summary"
+                style={{
+                  marginBottom: "15px",
+                  padding: "15px",
+                  background: "#f8f9fa",
+                  borderRadius: "8px",
+                }}
+              >
+                <div style={{ display: "flex", alignItems: "center" }}>
+                  <img
+                    src={item.image}
+                    alt={item.name}
+                    style={{
+                      width: "60px",
+                      height: "60px",
+                      objectFit: "cover",
+                      borderRadius: "8px",
+                      marginRight: "15px",
+                    }}
+                    onError={(e) => {
+                      e.target.onerror = null;
+                      e.target.src = "/images/noodle-placeholder.jpg";
+                    }}
+                  />
+                  <div>
+                    <h3
+                      style={{
+                        margin: "0 0 5px 0",
+                        fontSize: "16px",
+                        color: "#2d3436",
+                      }}
+                    >
+                      {item.name}
+                    </h3>
+                    <p style={{ margin: "2px 0", color: "#636e72" }}>
+                      Quantity: {item.quantity} ×{" "}
+                      {(item.discountedPrice || item.price).toFixed(2)} AED
+                    </p>
+                    <p
+                      style={{
+                        margin: "2px 0",
+                        fontWeight: "bold",
+                        color: "var(--noodly-blue)",
+                      }}
+                    >
+                      {(
+                        (item.discountedPrice || item.price) * item.quantity
+                      ).toFixed(2)}{" "}
+                      AED
+                    </p>
+                    {item.specialInstructions && (
+                      <p
+                        style={{
+                          margin: "5px 0 0 0",
+                          fontStyle: "italic",
+                          color: "#636e72",
+                          fontSize: "14px",
+                        }}
+                      >
+                        Note: {item.specialInstructions}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            ))}
+            <div
+              style={{
+                textAlign: "right",
+                paddingTop: "15px",
+                borderTop: "1px solid #e1e8ed",
+                marginTop: "15px",
+              }}
+            >
+              <h3 style={{ color: "var(--noodly-blue)", margin: "0" }}>
+                Total:{" "}
+                {cartItems
+                  .reduce(
+                    (total, item) =>
+                      total +
+                      (item.discountedPrice || item.price) * item.quantity,
+                    0
+                  )
+                  .toFixed(2)}{" "}
+                AED
+              </h3>
+            </div>
+          </div>
 
-      <div className="product-details-info">
-        <h2 className="product-details-name">{product.name}</h2>
-        <p className="product-details-description">{product.description}</p>
-
-        <div className="product-details-price">
-          {product.discountedPrice > 0 ? (
-            <>
-              <span className="original-price">
-                {product.price.toFixed(2)} AED
-              </span>
-              <span className="discounted-price">
-                {product.discountedPrice.toFixed(2)} AED
-              </span>
-            </>
-          ) : (
-            <span className="price">{product.price.toFixed(2)} AED</span>
-          )}
-        </div>
-
-        <div className="quantity-control">
-          <span>Quantity:</span>
-          <div className="quantity-buttons">
-            <button onClick={handleDecrement}>-</button>
-            <span>{quantity}</span>
-            <button onClick={handleIncrement}>+</button>
+          <div className="button-group">
+            <button className="next-button" onClick={handleNextStep}>
+              Next
+            </button>
           </div>
         </div>
+      );
+    }
 
-        <div className="special-instructions">
-          <label htmlFor="instructions">Special Instructions:</label>
-          <textarea
-            id="instructions"
-            value={specialInstructions}
-            onChange={(e) => setSpecialInstructions(e.target.value)}
-            placeholder="Any special requests?"
-            rows="3"
+    return (
+      <div className="product-details-content">
+        <div className="product-details-image-container">
+          <img
+            src={product.image}
+            alt={product.name}
+            className="product-details-image"
+            onError={(e) => {
+              e.target.onerror = null;
+              e.target.src = "/images/noodle-placeholder.jpg";
+            }}
           />
         </div>
 
-        <div className="total-section">
-          <span>Total:</span>
-          <span className="total-price">
-            {((product.discountedPrice || product.price) * quantity).toFixed(2)}{" "}
-            AED
-          </span>
-        </div>
+        <div className="product-details-info">
+          <h2 className="product-details-name">{product.name}</h2>
+          <p className="product-details-description">{product.description}</p>
 
-        <button className="next-button" onClick={handleNextStep}>
-          Next
-        </button>
+          <div className="product-details-price">
+            {product.discountedPrice > 0 ? (
+              <>
+                <span className="original-price">
+                  {product.price.toFixed(2)} AED
+                </span>
+                <span className="discounted-price">
+                  {product.discountedPrice.toFixed(2)} AED
+                </span>
+              </>
+            ) : (
+              <span className="price">{product.price.toFixed(2)} AED</span>
+            )}
+          </div>
+
+          <div className="quantity-control">
+            <span>Quantity:</span>
+            <div className="quantity-buttons">
+              <button onClick={handleDecrement}>-</button>
+              <span>{quantity}</span>
+              <button onClick={handleIncrement}>+</button>
+            </div>
+          </div>
+
+          <div className="special-instructions">
+            <label htmlFor="instructions">Special Instructions:</label>
+            <textarea
+              id="instructions"
+              value={specialInstructions}
+              onChange={(e) => setSpecialInstructions(e.target.value)}
+              placeholder="Any special requests?"
+              rows="3"
+            />
+          </div>
+
+          <div className="total-section">
+            <span>Total:</span>
+            <span className="total-price">
+              {((product.discountedPrice || product.price) * quantity).toFixed(
+                2
+              )}{" "}
+              AED
+            </span>
+          </div>
+
+          <button className="next-button" onClick={handleNextStep}>
+            Add to Cart
+          </button>
+        </div>
       </div>
-    </div>
-  );
+    );
+  };
 
   const renderStep2 = () => (
     <div className="product-details-content">
@@ -365,26 +582,38 @@ const ProductDetails = ({
   );
 
   const renderStep4 = () => {
-    // Automatically set delivery date to tomorrow
-    const tomorrow = new Date();
-    tomorrow.setDate(tomorrow.getDate() + 1);
     const formatDate = (date) => {
-      const year = date.getFullYear();
-      const month = String(date.getMonth() + 1).padStart(2, "0");
-      const day = String(date.getDate()).padStart(2, "0");
-      return `${year}-${month}-${day}`;
+      const d = new Date(date);
+      return d.toLocaleDateString("en-US", {
+        weekday: "long",
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+      });
     };
 
-    // Set default delivery time
-    const defaultTime = "12:00-13:00";
+    // Generate time slots
+    const generateTimeSlots = () => {
+      const slots = [];
+      const now = new Date();
+      const today = new Date().toISOString().split("T")[0];
+      let startHour = selectedDeliveryDate === today ? now.getHours() + 1 : 15; // 3:30 PM = 15:30
+      const endHour = 23; // 11 PM
 
-    // Set the values automatically if they're not set
-    if (!selectedDeliveryDate) {
-      setSelectedDeliveryDate(formatDate(tomorrow));
-    }
-    if (!selectedDeliveryTime) {
-      setSelectedDeliveryTime(defaultTime);
-    }
+      if (startHour < 15) startHour = 15;
+
+      for (let hour = startHour; hour < endHour; hour++) {
+        for (let minute of [0, 30]) {
+          if (hour === 15 && minute === 0) continue; // Skip 3:00 PM
+          const timeString = `${hour.toString().padStart(2, "0")}:${minute
+            .toString()
+            .padStart(2, "0")}`;
+          slots.push(timeString);
+        }
+      }
+
+      return slots;
+    };
 
     return (
       <div className="product-details-content">
@@ -393,38 +622,130 @@ const ProductDetails = ({
         <div className="delivery-details">
           <div className="delivery-info">
             <h3>Delivery Information</h3>
-            <p>
-              Your order will be delivered tomorrow between 12:00 PM - 1:00 PM
-            </p>
-          </div>
+            <div className="form-group">
+              <label htmlFor="deliveryDate">Delivery Date:</label>
+              <input
+                id="deliveryDate"
+                type="date"
+                value={selectedDeliveryDate}
+                onChange={(e) => setSelectedDeliveryDate(e.target.value)}
+                min={new Date().toISOString().split("T")[0]}
+                required
+              />
+              <span className="date-display">
+                {formatDate(selectedDeliveryDate)}
+              </span>
+            </div>
 
-          <div className="form-group">
-            <label htmlFor="paymentMethod">Payment Method:</label>
-            <select
-              id="paymentMethod"
-              value={paymentMethod}
-              onChange={(e) => setPaymentMethod(e.target.value)}
-              required
-            >
-              <option value="COD">Cash on Delivery</option>
-            </select>
+            <div className="form-group">
+              <label htmlFor="deliveryTime">Delivery Time:</label>
+              <select
+                id="deliveryTime"
+                value={selectedDeliveryTime}
+                onChange={(e) => setSelectedDeliveryTime(e.target.value)}
+                required
+              >
+                <option value="">Select a time</option>
+                {generateTimeSlots().map((time) => (
+                  <option key={time} value={time}>
+                    {time}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="paymentMethod">Payment Method:</label>
+              <select
+                id="paymentMethod"
+                value={paymentMethod}
+                onChange={(e) => setPaymentMethod(e.target.value)}
+                required
+              >
+                <option value="COD">Cash on Delivery</option>
+              </select>
+            </div>
           </div>
         </div>
 
         <div className="order-summary">
           <h3>Order Details</h3>
-          <p>
-            <strong>Product:</strong> {product.name}
-          </p>
-          <p>
-            <strong>Quantity:</strong> {quantity}
-          </p>
-          <p>
-            <strong>Price per item:</strong> {product.price.toFixed(2)} AED
-          </p>
-          <p>
-            <strong>Total:</strong> {(product.price * quantity).toFixed(2)} AED
-          </p>
+          {isCartCheckout ? (
+            // Multiple products in cart
+            cartItems.map((item) => (
+              <div key={item.id}>
+                <p>
+                  <strong>Product:</strong> {item.name}
+                </p>
+                <p>
+                  <strong>Quantity:</strong> {item.quantity}
+                </p>
+                <p>
+                  <strong>Price per item:</strong>{" "}
+                  {(item.discountedPrice || item.price).toFixed(2)} AED
+                </p>
+                <p>
+                  <strong>Subtotal:</strong>{" "}
+                  {(
+                    (item.discountedPrice || item.price) * item.quantity
+                  ).toFixed(2)}{" "}
+                  AED
+                </p>
+                {item.specialInstructions && (
+                  <p>
+                    <strong>Special Instructions:</strong>{" "}
+                    {item.specialInstructions}
+                  </p>
+                )}
+                <hr
+                  style={{ margin: "15px 0", borderTop: "1px dashed #e1e8ed" }}
+                />
+              </div>
+            ))
+          ) : (
+            // Single product
+            <>
+              <p>
+                <strong>Product:</strong> {product.name}
+              </p>
+              <p>
+                <strong>Quantity:</strong> {quantity}
+              </p>
+              <p>
+                <strong>Price per item:</strong>{" "}
+                {(product.discountedPrice || product.price).toFixed(2)} AED
+              </p>
+              <p>
+                <strong>Total:</strong>{" "}
+                {(
+                  (product.discountedPrice || product.price) * quantity
+                ).toFixed(2)}{" "}
+                AED
+              </p>
+            </>
+          )}
+
+          {isCartCheckout && (
+            <p
+              className="total-price"
+              style={{
+                fontWeight: "bold",
+                fontSize: "18px",
+                textAlign: "right",
+              }}
+            >
+              <strong>Total:</strong>{" "}
+              {cartItems
+                .reduce(
+                  (total, item) =>
+                    total +
+                    (item.discountedPrice || item.price) * item.quantity,
+                  0
+                )
+                .toFixed(2)}{" "}
+              AED
+            </p>
+          )}
 
           <h3>Customer Details</h3>
           <p>
@@ -443,7 +764,7 @@ const ProductDetails = ({
             <strong>Car Plate:</strong> {customerInfo.carPlate}
           </p>
 
-          {specialInstructions && (
+          {specialInstructions && !isCartCheckout && (
             <>
               <h3>Special Instructions</h3>
               <p>{specialInstructions}</p>
@@ -526,7 +847,9 @@ const ProductDetails = ({
                       <p className="status-text" style={{ margin: 0 }}>
                         Status:{" "}
                         <span className="status-value">
-                          {savedFirstElement || "Processing"}
+                          {savedFirstElement ||
+                            firstOrderElement ||
+                            "Processing"}
                         </span>
                       </p>
                       <button
@@ -559,17 +882,85 @@ const ProductDetails = ({
 
               <div className="order-summary-status">
                 <h4>Order Summary</h4>
-                {orderDetails ? (
+                {orderDetails?.products && orderDetails.products.length > 0 ? (
+                  // Show all products from the order
                   <>
-                    <p>
-                      <strong>Product:</strong> {orderDetails.product.name}
-                    </p>
-                    <p>
-                      <strong>Quantity:</strong> {orderDetails.product.quantity}
-                    </p>
-                    <p>
+                    {orderDetails.products.map((item, index) => (
+                      <div key={index} style={{ marginBottom: "15px" }}>
+                        <div
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "15px",
+                          }}
+                        >
+                          {item.image && (
+                            <img
+                              src={item.image}
+                              alt={item.name}
+                              style={{
+                                width: "50px",
+                                height: "50px",
+                                objectFit: "cover",
+                                borderRadius: "5px",
+                              }}
+                              onError={(e) => {
+                                e.target.onerror = null;
+                                e.target.src = "/images/noodle-placeholder.jpg";
+                              }}
+                            />
+                          )}
+                          <div style={{ flex: "1" }}>
+                            <p
+                              style={{
+                                margin: "0 0 5px 0",
+                                fontWeight: "bold",
+                              }}
+                            >
+                              {item.name} × {item.quantity}
+                            </p>
+                            <p style={{ margin: "0", color: "#666" }}>
+                              {item.price} AED
+                            </p>
+                            {item.specialInstructions && (
+                              <p
+                                style={{
+                                  margin: "5px 0 0 0",
+                                  fontStyle: "italic",
+                                  fontSize: "14px",
+                                  color: "#666",
+                                }}
+                              >
+                                Note: {item.specialInstructions}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                        <hr
+                          style={{
+                            margin: "10px 0",
+                            borderTop: "1px dashed #e1e8ed",
+                          }}
+                        />
+                      </div>
+                    ))}
+                    <p
+                      style={{
+                        fontWeight: "bold",
+                        textAlign: "right",
+                        marginTop: "15px",
+                      }}
+                    >
                       <strong>Total:</strong> {orderDetails.totalAmount} AED
                     </p>
+                  </>
+                ) : (
+                  <p>Order details not available</p>
+                )}
+
+                {orderDetails && (
+                  <>
+                    <h4>Delivery Information</h4>
                     <p>
                       <strong>Delivery Time:</strong>{" "}
                       {orderDetails.deliveryTime}
@@ -578,29 +969,21 @@ const ProductDetails = ({
                       <strong>Delivery Date:</strong>{" "}
                       {orderDetails.deliveryDate}
                     </p>
+
+                    <h4>Customer Information</h4>
                     <p>
-                      <strong>Customer Name:</strong>{" "}
-                      {orderDetails.customerInfo.name}
+                      <strong>Name:</strong> {orderDetails.customerInfo?.name}
                     </p>
                     <p>
-                      <strong>Phone:</strong>{" "}
-                      {orderDetails.customerInfo.phoneNumber}
+                      <strong>Phone:</strong> {orderDetails.phoneNumber}
                     </p>
                     <p>
                       <strong>Car Details:</strong>{" "}
-                      {orderDetails.customerInfo.carColor}{" "}
-                      {orderDetails.customerInfo.carModel} (
-                      {orderDetails.customerInfo.carPlate})
+                      {orderDetails.customerInfo?.carColor}{" "}
+                      {orderDetails.customerInfo?.carModel} (
+                      {orderDetails.customerInfo?.carPlate})
                     </p>
-                    {orderDetails.specialInstructions && (
-                      <>
-                        <h4>Special Instructions</h4>
-                        <p>{orderDetails.specialInstructions}</p>
-                      </>
-                    )}
                   </>
-                ) : (
-                  <p>Order details not available</p>
                 )}
               </div>
 
@@ -658,6 +1041,7 @@ const ProductDetails = ({
             ×
           </button>
         )}
+
         {renderCurrentStep()}
       </div>
     </div>

@@ -5,7 +5,7 @@ export const useOrderSubmission = () => {
   const [error, setError] = useState(null);
   const [orderSuccess, setOrderSuccess] = useState(false);
   const [orderStatus, setOrderStatus] = useState(null);
-  const [firstOrderElement, setFirstOrderElement] = useState(null); // <-- new state
+  const [firstOrderElement, setFirstOrderElement] = useState(null); // <-- state for first element
 
   const generateOrderId = () =>
     `ORD-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
@@ -126,14 +126,20 @@ export const useOrderSubmission = () => {
 
       if (!response.ok) throw new Error("Failed to submit order");
 
-      // Store the first element from the API response data (adjust path if needed)
-      const firstElement = data?.response_data?.[0] || null;
+      // Extract the first element from response_code array (e.g., "ord_159")
+      const firstElement = data?.response_code?.[0] || null;
       setFirstOrderElement(firstElement);
+      console.log("First element from response:", firstElement);
 
       const realOrderId = data?.response_code?.[1];
       console.log("Real order ID from response:", realOrderId);
 
       if (realOrderId) {
+        // Calculate total amount for all products
+        const totalAmount = orderData.products
+          .reduce((sum, product) => sum + product.price * product.quantity, 0)
+          .toFixed(2);
+
         const orderDetails = {
           orderId: realOrderId,
           orderData: orderData,
@@ -144,13 +150,19 @@ export const useOrderSubmission = () => {
             carColor: orderData.carColor,
             carPlate: orderData.carPlate,
           },
-          product: orderData.products[0],
+          products: orderData.products.map((product) => ({
+            id: product.id,
+            name: product.name,
+            quantity: product.quantity,
+            price: product.price.toFixed(2),
+            specialInstructions: product.specialInstructions || "",
+            image: product.image,
+          })),
           deliveryTime: orderData.deliveryTime,
           deliveryDate: orderData.deliveryDate,
+          phoneNumber: orderData.phoneNumber,
           specialInstructions: orderData.specialInstructions,
-          totalAmount: (
-            orderData.products[0].price * orderData.products[0].quantity
-          ).toFixed(2),
+          totalAmount: totalAmount,
           apiResponse: data, // Save the full API response
         };
 
@@ -169,7 +181,8 @@ export const useOrderSubmission = () => {
         realOrderId: realOrderId,
         message: "Order submitted successfully",
         fullResponse: data,
-        firstElement, // also return it here if needed outside
+        firstElement, // Return the first element
+        apiResponse: data, // Return the full API response
       };
     } catch (err) {
       console.error("Order submission error:", err);
@@ -217,6 +230,11 @@ export const useOrderSubmission = () => {
         throw new Error(data.response_text || "Failed to fetch order status");
       }
 
+      // Extract first element from the status response if available
+      if (data?.response_code?.[0]) {
+        setFirstOrderElement(data.response_code[0]);
+      }
+
       setOrderStatus(data);
       setError(null);
 
@@ -248,7 +266,7 @@ export const useOrderSubmission = () => {
     error,
     orderSuccess,
     orderStatus,
-    firstOrderElement, // <-- expose this so you can access it outside
+    firstOrderElement, // Expose the first element
     getOrderStatus,
   };
 };
