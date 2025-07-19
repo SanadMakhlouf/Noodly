@@ -590,38 +590,11 @@ const ProductDetails = ({
 
         <div className="delivery-details">
           <div className="delivery-info">
-            <h3>Delivery Information</h3>
             <div className="form-group">
-              <label htmlFor="deliveryDate">Delivery Date:</label>
-              <input
-                id="deliveryDate"
-                type="date"
-                value={selectedDeliveryDate}
-                onChange={(e) => setSelectedDeliveryDate(e.target.value)}
-                min={new Date().toISOString().split("T")[0]}
-                required
-              />
-              <span className="date-display">
-                {formatDate(selectedDeliveryDate)}
-              </span>
+            
             </div>
 
-            <div className="form-group">
-              <label htmlFor="deliveryTime">Delivery Time:</label>
-              <select
-                id="deliveryTime"
-                value={selectedDeliveryTime}
-                onChange={(e) => setSelectedDeliveryTime(e.target.value)}
-                required
-              >
-                <option value="">Select a time</option>
-                {generateTimeSlots().map((time) => (
-                  <option key={time} value={time}>
-                    {time}
-                  </option>
-                ))}
-              </select>
-            </div>
+         
 
             <div className="form-group">
               <label htmlFor="paymentMethod">Payment Method:</label>
