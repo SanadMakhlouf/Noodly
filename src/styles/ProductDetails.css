@@ -56,25 +56,32 @@
 
 .close-button {
   position: absolute;
-  right: 15px;
-  top: 15px;
-  background: transparent;
-  border: none;
-  font-size: 24px;
+  right: 16px;
+  top: 16px;
+  background: #fff;
+  border: 2px solid var(--noodly-blue);
+  font-size: 45px !important;
+  font-weight: bold;
   cursor: pointer;
-  color: #666;
-  width: 30px;
-  height: 30px;
+  color: var(--noodly-blue);
+  width: 64px;
+  height: 64px;
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 2;
-  transition: all 0.3s ease;
+  border-radius: 50%;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+  transition: all 0.2s;
+  outline: none;
 }
 
-.close-button:hover {
-  color: #ff4757;
-  transform: rotate(90deg);
+.close-button:hover, .close-button:focus {
+  background: var(--noodly-blue);
+  color: #fff;
+  border-color: var(--noodly-yellow);
+  box-shadow: 0 6px 24px rgba(0,0,0,0.22);
+  transform: scale(1.08);
 }
 
 .product-details-content {
@@ -842,17 +849,6 @@
   max-height: 90vh;
   overflow-y: auto;
   position: relative;
-}
-
-.close-button {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  background: none;
-  border: none;
-  font-size: 24px;
-  cursor: pointer;
-  color: #666;
 }
 
 .product-details-content {
