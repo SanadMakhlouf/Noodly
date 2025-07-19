@@ -109,7 +109,7 @@ export const useOrderSubmission = () => {
         delivery_time_required: "",
         pickup_time_required: "",
         delivery_charge: "10",
-        vehicle_info: null,
+        vehicle_info: orderData.vehicle_info || null,
       };
 
       const response = await fetch(

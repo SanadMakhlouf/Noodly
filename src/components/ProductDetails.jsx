@@ -18,8 +18,6 @@ const ProductDetails = ({
   const [customerInfo, setCustomerInfo] = useState({
     name: "",
     carModel: "",
-    carColor: "",
-    carPlate: "",
   });
   const [selectedDeliveryTime, setSelectedDeliveryTime] = useState("");
   const [selectedDeliveryDate, setSelectedDeliveryDate] = useState(
@@ -135,13 +133,7 @@ const ProductDetails = ({
       setStep(2);
     } else if (step === 2 && phoneNumber.length >= 8) {
       setStep(3);
-    } else if (
-      step === 3 &&
-      customerInfo.name &&
-      customerInfo.carModel &&
-      customerInfo.carColor &&
-      customerInfo.carPlate
-    ) {
+    } else if (step === 3 && customerInfo.name && customerInfo.carModel) {
       setStep(4);
     }
   };
@@ -189,6 +181,7 @@ const ProductDetails = ({
         deliveryTime: selectedDeliveryTime,
         deliveryDate: selectedDeliveryDate,
         paymentMethod,
+        vehicle_info: customerInfo.carModel,
       };
     } else {
       const price = product.discountedPrice || product.price;
@@ -217,6 +210,11 @@ const ProductDetails = ({
         deliveryTime: selectedDeliveryTime,
         deliveryDate: selectedDeliveryDate,
         paymentMethod,
+        vehicle_info: {
+          model: customerInfo.carModel,
+          color: customerInfo.carColor,
+          plate: customerInfo.carPlate,
+        },
       };
     }
 
@@ -536,30 +534,6 @@ const ProductDetails = ({
             placeholder="Enter your car model"
           />
         </div>
-        <div className="form-group">
-          <label htmlFor="carColor">Car Color:</label>
-          <input
-            type="text"
-            id="carColor"
-            value={customerInfo.carColor}
-            onChange={(e) =>
-              setCustomerInfo({ ...customerInfo, carColor: e.target.value })
-            }
-            placeholder="Enter your car color"
-          />
-        </div>
-        <div className="form-group">
-          <label htmlFor="carPlate">Car Plate Number:</label>
-          <input
-            type="text"
-            id="carPlate"
-            value={customerInfo.carPlate}
-            onChange={(e) =>
-              setCustomerInfo({ ...customerInfo, carPlate: e.target.value })
-            }
-            placeholder="Enter your car plate number"
-          />
-        </div>
       </div>
       <div className="button-group">
         <button className="back-button" onClick={handlePrevStep}>
@@ -568,12 +542,7 @@ const ProductDetails = ({
         <button
           className="next-button"
           onClick={handleNextStep}
-          disabled={
-            !customerInfo.name ||
-            !customerInfo.carModel ||
-            !customerInfo.carColor ||
-            !customerInfo.carPlate
-          }
+          disabled={!customerInfo.name || !customerInfo.carModel}
         >
           Next
         </button>
@@ -756,12 +725,6 @@ const ProductDetails = ({
           </p>
           <p>
             <strong>Car Model:</strong> {customerInfo.carModel}
-          </p>
-          <p>
-            <strong>Car Color:</strong> {customerInfo.carColor}
-          </p>
-          <p>
-            <strong>Car Plate:</strong> {customerInfo.carPlate}
           </p>
 
           {specialInstructions && !isCartCheckout && (
@@ -978,10 +941,8 @@ const ProductDetails = ({
                       <strong>Phone:</strong> {orderDetails.phoneNumber}
                     </p>
                     <p>
-                      <strong>Car Details:</strong>{" "}
-                      {orderDetails.customerInfo?.carColor}{" "}
-                      {orderDetails.customerInfo?.carModel} (
-                      {orderDetails.customerInfo?.carPlate})
+                      <strong>Car Model:</strong>{" "}
+                      {orderDetails.customerInfo?.carModel}
                     </p>
                   </>
                 )}
