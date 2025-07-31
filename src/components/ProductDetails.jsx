@@ -16,7 +16,7 @@ const ProductDetails = ({
   const [specialInstructions, setSpecialInstructions] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
   const [customerInfo, setCustomerInfo] = useState({
-    name: "",
+    name: "Customer",
     carModel: "",
   });
   const [selectedDeliveryTime, setSelectedDeliveryTime] = useState("");
@@ -133,7 +133,8 @@ const ProductDetails = ({
       setStep(2);
     } else if (step === 2 && phoneNumber.length >= 8) {
       setStep(3);
-    } else if (step === 3 && customerInfo.name && customerInfo.carModel) {
+    } else if (step === 3 && customerInfo.carModel) {
+      // Only require car number, not name
       setStep(4);
     }
   };
@@ -510,20 +511,9 @@ const ProductDetails = ({
     <div className="product-details-content">
       <h2 className="step-title">Enter Your Details</h2>
       <div className="customer-info-form">
+
         <div className="form-group">
-          <label htmlFor="name">Full Name:</label>
-          <input
-            type="text"
-            id="name"
-            value={customerInfo.name}
-            onChange={(e) =>
-              setCustomerInfo({ ...customerInfo, name: e.target.value })
-            }
-            placeholder="Enter your full name"
-          />
-        </div>
-        <div className="form-group">
-          <label htmlFor="carModel">Car Model:</label>
+          <label htmlFor="carModel">Car Number:</label>
           <input
             type="text"
             id="carModel"
@@ -531,7 +521,7 @@ const ProductDetails = ({
             onChange={(e) =>
               setCustomerInfo({ ...customerInfo, carModel: e.target.value })
             }
-            placeholder="Enter your car model"
+            placeholder="Enter your car number"
           />
         </div>
       </div>
@@ -604,7 +594,7 @@ const ProductDetails = ({
                 onChange={(e) => setPaymentMethod(e.target.value)}
                 required
               >
-                <option value="COD">Cash on Delivery</option>
+                <option value="COD">Payment on Pickup</option>
               </select>
             </div>
           </div>
@@ -690,14 +680,12 @@ const ProductDetails = ({
           )}
 
           <h3>Customer Details</h3>
-          <p>
-            <strong>Name:</strong> {customerInfo.name}
-          </p>
+
           <p>
             <strong>Phone:</strong> {phoneNumber}
           </p>
           <p>
-            <strong>Car Model:</strong> {customerInfo.carModel}
+            <strong>Car Number:</strong> {customerInfo.carModel}
           </p>
 
           {specialInstructions && !isCartCheckout && (
@@ -907,14 +895,12 @@ const ProductDetails = ({
                     </p>
 
                     <h4>Customer Information</h4>
-                    <p>
-                      <strong>Name:</strong> {orderDetails.customerInfo?.name}
-                    </p>
+
                     <p>
                       <strong>Phone:</strong> {orderDetails.phoneNumber}
                     </p>
                     <p>
-                      <strong>Car Model:</strong>{" "}
+                      <strong>Car Number:</strong>{" "}
                       {orderDetails.customerInfo?.carModel}
                     </p>
                   </>
