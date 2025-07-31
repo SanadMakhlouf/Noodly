@@ -1,9 +1,9 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import "../styles/Menu.css";
-import noodle from "../assets/box1.png";
+import { useMenuData } from "../hooks/useMenuData";
 
-function MenuItem({ name, description, price }) {
+function MenuItem({ id, name, image, price }) {
   const navigate = useNavigate();
 
   const handleOrderClick = () => {
@@ -13,12 +13,18 @@ function MenuItem({ name, description, price }) {
   return (
     <div className="menu-card">
       <div className="menu-image">
-        <img src={noodle} alt={name} />
+        <img 
+          src={image} 
+          alt={name} 
+          onError={(e) => {
+            e.target.onerror = null;
+            e.target.src = "/images/noodle-placeholder.jpg";
+          }}
+        />
       </div>
       <div className="menu-content">
         <div>
           <h3 className="menu-title">{name}</h3>
-          <p className="menu-description">{description}</p>
         </div>
         <div className="menu-price-container">
           <button className="menu-button" onClick={handleOrderClick}>
@@ -33,29 +39,15 @@ function MenuItem({ name, description, price }) {
 
 function Menu() {
   const navigate = useNavigate();
-
-  const menuItems = [
-    {
-      name: "Cheesy 2",
-      description: "Delicious noodles with special ingredients",
-      price: 30.0,
-    },
-    {
-      name: "Soya",
-      description: "Delicious noodles with special ingredients",
-      price: 30.0,
-    },
-    {
-      name: "Korean",
-      description: "Delicious noodles with special ingredients",
-      price: 30.0,
-    },
-    {
-      name: "Korean",
-      description: "Delicious noodles with special ingredients",
-      price: 30.0,
-    },
-  ];
+  const { products, loading, error } = useMenuData();
+  const [featuredProducts, setFeaturedProducts] = useState([]);
+  
+  useEffect(() => {
+    if (products.length > 0) {
+      // Take the first 4 products from the API
+      setFeaturedProducts(products.slice(0, 4));
+    }
+  }, [products]);
 
   const handleSeeMore = () => {
     navigate("/products");
@@ -64,11 +56,17 @@ function Menu() {
   return (
     <section className="menu" id="menu">
       <div className="container">
-        <div className="menu-grid">
-          {menuItems.map((item, index) => (
-            <MenuItem key={index} {...item} />
-          ))}
-        </div>
+        {loading ? (
+          <div className="loading">Loading products...</div>
+        ) : error ? (
+          <div className="error">Error loading products</div>
+        ) : (
+          <div className="menu-grid">
+            {featuredProducts.map((item) => (
+              <MenuItem key={item.id} {...item} />
+            ))}
+          </div>
+        )}
         <div className="see-more-container">
           <button className="see-more-button" onClick={handleSeeMore}>
             See More Products

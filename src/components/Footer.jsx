@@ -20,9 +20,9 @@ function Footer() {
         <div>
           <h3 className="footer-title">GET IN TOUCH</h3>
           <ul className="footer-links">
-            <li className="footer-link">+94 771234567</li>
+            <li className="footer-link">+971 56 697 0038</li>
             <li className="footer-link">info@noodly.com</li>
-            <li className="footer-link">123 Noodle Street</li>
+            
           </ul>
         </div>
       </div>

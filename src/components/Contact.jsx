@@ -36,7 +36,7 @@ function Contact() {
               </svg>
             }
             title="Phone"
-            subtitle="+94 771234567"
+            subtitle="+971 56 697 0038"
           />
           <ContactCard
             icon={
@@ -57,7 +57,7 @@ function Contact() {
               </svg>
             }
             title="Whatsapp"
-            subtitle="+94 771234567"
+            subtitle="+971 56 697 0038"
           />
           <ContactCard
             icon={

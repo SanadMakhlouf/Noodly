@@ -789,17 +789,30 @@ const ProductDetails = ({
                         Refresh
                       </button>
                     </div>
+                    
+                    <div className="cooking-animation-simple">
+                      <div className="cooking-indicator">
+                        <i className="fas fa-utensils"></i>
+                      </div>
+                    </div>
 
-                    <p
-                      style={{
-                        textAlign: "center",
-                        fontWeight: "bold",
-                        margin: "10px 0",
-                        color: "#4CAF50",
-                      }}
-                    >
-                      Submitted Order
-                    </p>
+                    <div className="order-status-message">
+                      <p className="status-main">Your order is being prepared!</p>
+                      <p className="status-time">Estimated ready time: 15-20 minutes</p>
+                    </div>
+                    
+                    <div className="pickup-location">
+                      <h4>Pickup Location</h4>
+                      <a 
+                        href="https://maps.app.goo.gl/5dbywSUVo7qPHaVu5?g_st=ipc" 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="location-link"
+                      >
+                        <i className="fas fa-map-marker-alt"></i>
+                        Noodly - Al Shawamekh, Abu Dhabi
+                      </a>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -907,16 +920,7 @@ const ProductDetails = ({
                 )}
               </div>
 
-              <p
-                style={{
-                  textAlign: "center",
-                  fontWeight: "bold",
-                  margin: "10px 0",
-                  color: "#4CAF50",
-                }}
-              >
-                Submitted Order
-              </p>
+
             </>
           ) : (
             <div className="loading-status">
