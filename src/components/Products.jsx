@@ -6,6 +6,7 @@ import logo from "../assets/img40-removebg-preview.png";
 import bgImage from "../assets/noodly-cups.png";
 import ProductDetails from "./ProductDetails";
 import Cart from "./Cart";
+import LoadingScreen from "./LoadingScreen";
 
 const Products = () => {
   const { products, categories, error, selectedCategory, setSelectedCategory } =
@@ -14,6 +15,8 @@ const Products = () => {
   const [showOrderStatus, setShowOrderStatus] = useState(false);
   const [cartItems, setCartItems] = useState([]);
   const [showCart, setShowCart] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [animatedItems, setAnimatedItems] = useState([]);
   const location = useLocation();
   const searchParams = new URLSearchParams(location.search);
   const searchQuery = searchParams.get("search") || "";
@@ -61,6 +64,43 @@ const Products = () => {
       }
     }
   }, [searchQuery, filteredProducts]);
+  
+  // Handle loading screen and animations
+  useEffect(() => {
+    // Simulate loading time
+    const timer = setTimeout(() => {
+      setIsLoading(false);
+    }, 3000);
+    
+    return () => clearTimeout(timer);
+  }, []);
+  
+  // Animate products when they come into view
+  useEffect(() => {
+    if (!isLoading && products.length > 0) {
+      const observer = new IntersectionObserver(
+        (entries) => {
+          entries.forEach(entry => {
+            if (entry.isIntersecting) {
+              const productId = entry.target.getAttribute('data-product-id');
+              if (productId && !animatedItems.includes(productId)) {
+                setAnimatedItems(prev => [...prev, productId]);
+              }
+              observer.unobserve(entry.target);
+            }
+          });
+        },
+        { threshold: 0.2 }
+      );
+      
+      const productElements = document.querySelectorAll('.product-card');
+      productElements.forEach(el => observer.observe(el));
+      
+      return () => {
+        productElements.forEach(el => observer.unobserve(el));
+      };
+    }
+  }, [isLoading, products, animatedItems]);
 
   if (error) {
     return (
@@ -208,6 +248,10 @@ const Products = () => {
     0
   );
 
+  if (isLoading) {
+    return <LoadingScreen finishLoading={() => setIsLoading(false)} />;
+  }
+
   return (
     <div className="products-container">
       <button
@@ -233,13 +277,21 @@ const Products = () => {
       <div className="content-overlay">
         <div className="products-header">
           <div className="header-content">
-                          <div className="logo-section">
-                <img src={logo} alt="Noodly Logo" className="header-logo" />
-                <h1 className="products-title">Menu</h1>
+                          
+                          <div className="business-info">
+                <div className="info-item">
+                  <i className="fas fa-clock"></i>
+                  <span>Open daily from 3:30PM to 11:00 pm</span>
+                </div>
+                <div className="info-item">
+                  <i className="fas fa-star"></i>
+                  <span>Serving up the best noodles in Abudhabi ✨</span>
+                </div>
+                <div className="info-item">
+                  <i className="fas fa-map-marker-alt"></i>
+                  <span>Based in Alshawamekh 📍</span>
+                </div>
               </div>
-            <div className="business-info">
-              {/* Business info hidden in the new design */}
-            </div>
           </div>
           {searchQuery && (
             <p className="search-results">
@@ -287,12 +339,13 @@ const Products = () => {
             <div
               key={product.id}
               id={`product-${product.id}`}
+              data-product-id={product.id}
               className={`product-card ${
                 searchQuery &&
                 product.name.toLowerCase().includes(searchQuery.toLowerCase())
                   ? "search-match"
                   : ""
-              }`}
+              } ${animatedItems.includes(product.id.toString()) ? "animate-in" : ""}`}
               onClick={() => handleOrderClick(product)}
             >
               {(product.id === 3 || product.id === 4) && (
@@ -318,7 +371,7 @@ const Products = () => {
                 <div className="product-footer">
                   <div className="price-container">
                     <span className="price">
-                      ₹ {product.price.toFixed(0)}
+                      AED {product.price.toFixed(0)}
                     </span>
                   </div>
                   <button
