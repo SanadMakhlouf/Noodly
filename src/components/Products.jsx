@@ -42,6 +42,12 @@ const Products = () => {
       searchQuery === "" ||
       product.name.toLowerCase().includes(searchQuery.toLowerCase())
     );
+  }).map(product => {
+    // Add isTopRated property to approximately 30% of products
+    return {
+      ...product,
+      isTopRated: Math.random() < 0.3
+    };
   });
 
   // Scroll to matching product if search query exists
@@ -227,23 +233,12 @@ const Products = () => {
       <div className="content-overlay">
         <div className="products-header">
           <div className="header-content">
-            <div className="logo-section">
-              <img src={logo} alt="Noodly Logo" className="header-logo" />
-              <h1 className="products-title">Our Menu</h1>
-            </div>
+                          <div className="logo-section">
+                <img src={logo} alt="Noodly Logo" className="header-logo" />
+                <h1 className="products-title">Menu</h1>
+              </div>
             <div className="business-info">
-              <div className="info-item">
-                <i className="fas fa-clock"></i>
-                <span>Open daily from 3:30PM to 11:00 pm</span>
-              </div>
-              <div className="info-item">
-                <i className="fas fa-star"></i>
-                <span>Serving up the best noodles in Abudhabi ✨</span>
-              </div>
-              <div className="info-item">
-                <i className="fas fa-map-marker-alt"></i>
-                <span>Based in Alshawamekh 📍</span>
-              </div>
+              {/* Business info hidden in the new design */}
             </div>
           </div>
           {searchQuery && (
@@ -298,7 +293,13 @@ const Products = () => {
                   ? "search-match"
                   : ""
               }`}
+              onClick={() => handleOrderClick(product)}
             >
+              {(product.id === 3 || product.id === 4) && (
+                <div className="top-rated-badge">
+                  <i className="fas fa-star"></i> Top rated
+                </div>
+              )}
               <div className="product-image-container">
                 <img
                   className="product-image"
@@ -311,32 +312,23 @@ const Products = () => {
                 />
               </div>
               <div className="product-content">
-                <h3 className="product-name">{product.name}</h3>
-                {product.description && (
-                  <p className="product-description">{product.description}</p>
-                )}
+                <div>
+                  <h3 className="product-name">{product.name}</h3>
+                </div>
                 <div className="product-footer">
                   <div className="price-container">
-                    {product.discountedPrice ? (
-                      <>
-                        <span className="original-price">
-                          {product.price.toFixed(2)} AED
-                        </span>
-                        <span className="discounted-price">
-                          {product.discountedPrice.toFixed(2)} AED
-                        </span>
-                      </>
-                    ) : (
-                      <span className="price">
-                        {product.price.toFixed(2)} AED
-                      </span>
-                    )}
+                    <span className="price">
+                      ₹ {product.price.toFixed(0)}
+                    </span>
                   </div>
                   <button
                     className="customize-button"
-                    onClick={() => handleOrderClick(product)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleOrderClick(product);
+                    }}
                   >
-                    Add to Cart
+                    +
                   </button>
                 </div>
               </div>
