@@ -27,11 +27,7 @@ function Services() {
             title="YOUR ORDER"
             description="Choose your favorite noodles and customize them to your taste"
           />
-          <ServiceCard
-            icon={<i className="fa-solid fa-motorcycle"></i>}
-            title="WE DELIVER"
-            description="Fast and reliable delivery right to your doorstep"
-          />
+          
           <ServiceCard
             icon={<i className="fa-solid fa-utensils"></i>}
             title="ENJOY FRESH FOOD"
